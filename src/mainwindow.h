@@ -3,6 +3,7 @@
 
 #include <KXmlGuiWindow>
 #include <QStackedWidget>
+#include <QSplitter>
 #include <memory>
 
 #include "statusbar.h"
@@ -29,6 +30,9 @@ private Q_SLOTS:
     void showAbout();
     void showLogViewer();
     void toggleSidebar();
+    void expandAllItems();
+    void collapseAllItems();
+    void showTreeContextMenu(const QPoint &position);
     void onFileSelected(const QString &filePath);
     void onFileModified();
 
@@ -40,6 +44,7 @@ private:
 
     QTreeView *m_fileTreeView;
     QTabWidget *m_editorTabs;
+    QSplitter *m_splitter;
     
     std::unique_ptr<ChezmoiService> m_chezmoiService;
     std::unique_ptr<DotfileManager> m_dotfileManager;

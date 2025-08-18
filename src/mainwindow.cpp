@@ -31,6 +31,8 @@
 #include <QFileSystemModel>
 #include <QIcon>
 #include <QStandardPaths>
+#include <QMenu>
+#include <QPoint>
 
 #include <memory>
 
@@ -41,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     : KXmlGuiWindow(parent)
     , m_fileTreeView(nullptr)
     , m_editorTabs(nullptr)
+    , m_splitter(nullptr)
     , m_chezmoiService(std::make_unique<ChezmoiService>(this))
     , m_dotfileManager(std::make_unique<DotfileManager>(this))
     , m_configEditor(std::make_unique<ConfigEditor>(this))
@@ -68,48 +71,41 @@ void MainWindow::setupUI()
     auto *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
     
-    // Create main horizontal layout (no margins for flush sidebar)
+    // Create main layout
     auto *mainLayout = new QHBoxLayout(centralWidget);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
     
-    // Left sidebar - File tree
+    // Create horizontal splitter
+    m_splitter = new QSplitter(Qt::Horizontal, this);
+    
+    // Left panel - File tree
     m_fileTreeView = new QTreeView(this);
-    m_fileTreeView->setMinimumWidth(200);
-    m_fileTreeView->setMaximumWidth(400);
-    m_fileTreeView->resize(250, m_fileTreeView->height());
+    m_fileTreeView->setMinimumWidth(150);
     m_fileTreeView->setModel(m_dotfileManager.get());
-    
-    /* Style the sidebar to look integrated
-    m_fileTreeView->setStyleSheet(
-        "QTreeView {"
-        "    border: none;"
-        "    border-right: 1px solid palette(mid);"
-        "    background-color: palette(alternate-base);"
-        "    selection-background-color: palette(highlight);"
-        "}"
-        "QTreeView::item {"
-        "    padding: 4px 8px;"
-        "    border: none;"
-        "}"
-        "QTreeView::item:hover {"
-        "    background-color: palette(midlight);"
-        "}"
-        "QTreeView::item:selected {"
-        "    background-color: palette(highlight);"
-        "}"_L1
-    );*/
-    
     m_fileTreeView->setHeaderHidden(true);
     m_fileTreeView->setIndentation(15);
     m_fileTreeView->setRootIsDecorated(true);
-    mainLayout->addWidget(m_fileTreeView);
     
-    // Right panel - Editor tabs only
+    // Add context menu for expand/collapse
+    m_fileTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_fileTreeView, &QTreeView::customContextMenuRequested, 
+            this, &MainWindow::showTreeContextMenu);
+    
+    // Right panel - Editor tabs
     m_editorTabs = new QTabWidget(this);
     m_editorTabs->setTabsClosable(true);
     
-    mainLayout->addWidget(m_editorTabs, 1); // Give the editor tabs stretch priority
+    // Add widgets to splitter
+    m_splitter->addWidget(m_fileTreeView);
+    m_splitter->addWidget(m_editorTabs);
+    
+    // Set initial splitter sizes (25% for tree, 75% for editor)
+    m_splitter->setSizes({250, 750});
+    m_splitter->setCollapsible(0, false); // Don't allow tree to collapse completely
+    
+    // Add splitter to main layout
+    mainLayout->addWidget(m_splitter);
     
     // Setup status bar
     setupStatusBar();
@@ -152,6 +148,20 @@ void MainWindow::setupActions()
     toggleSidebarAction->setChecked(true);
     KActionCollection::setDefaultShortcut(toggleSidebarAction, QKeySequence(Qt::CTRL | Qt::Key_B));
     connect(toggleSidebarAction, &QAction::triggered, this, &MainWindow::toggleSidebar);
+    
+    auto *expandAllAction = actionCollection()->addAction(QStringLiteral("expand_all"));
+    expandAllAction->setText(i18n("E&xpand All"));
+    expandAllAction->setIcon(QIcon::fromTheme(QStringLiteral("expand-all")));
+    expandAllAction->setToolTip(i18n("Expand all items in the file tree"));
+    KActionCollection::setDefaultShortcut(expandAllAction, QKeySequence(Qt::CTRL | Qt::Key_Plus));
+    connect(expandAllAction, &QAction::triggered, this, &MainWindow::expandAllItems);
+    
+    auto *collapseAllAction = actionCollection()->addAction(QStringLiteral("collapse_all"));
+    collapseAllAction->setText(i18n("&Collapse All"));
+    collapseAllAction->setIcon(QIcon::fromTheme(QStringLiteral("collapse-all")));
+    collapseAllAction->setToolTip(i18n("Collapse all items in the file tree"));
+    KActionCollection::setDefaultShortcut(collapseAllAction, QKeySequence(Qt::CTRL | Qt::Key_Minus));
+    connect(collapseAllAction, &QAction::triggered, this, &MainWindow::collapseAllItems);
     
     // Settings menu
     KStandardAction::preferences(this, &MainWindow::openSettings, actionCollection());
@@ -204,6 +214,45 @@ void MainWindow::toggleSidebar()
             action->setChecked(!isVisible);
         }
     }
+}
+
+void MainWindow::expandAllItems()
+{
+    if (m_fileTreeView) {
+        m_fileTreeView->expandAll();
+    }
+}
+
+void MainWindow::collapseAllItems()
+{
+    if (m_fileTreeView) {
+        m_fileTreeView->collapseAll();
+    }
+}
+
+void MainWindow::showTreeContextMenu(const QPoint &position)
+{
+    if (!m_fileTreeView) {
+        return;
+    }
+    
+    QMenu contextMenu(this);
+    
+    auto *expandAllAction = contextMenu.addAction(QIcon::fromTheme(QStringLiteral("expand-all")), 
+                                                  i18n("Expand All"));
+    connect(expandAllAction, &QAction::triggered, this, &MainWindow::expandAllItems);
+    
+    auto *collapseAllAction = contextMenu.addAction(QIcon::fromTheme(QStringLiteral("collapse-all")), 
+                                                    i18n("Collapse All"));
+    connect(collapseAllAction, &QAction::triggered, this, &MainWindow::collapseAllItems);
+    
+    contextMenu.addSeparator();
+    
+    auto *refreshAction = contextMenu.addAction(QIcon::fromTheme(QStringLiteral("view-refresh")), 
+                                                i18n("Refresh"));
+    connect(refreshAction, &QAction::triggered, this, &MainWindow::refreshFiles);
+    
+    contextMenu.exec(m_fileTreeView->mapToGlobal(position));
 }
 
 void MainWindow::showAbout()

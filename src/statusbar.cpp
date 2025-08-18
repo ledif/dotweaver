@@ -101,7 +101,7 @@ QString StatusBar::getGitInfo()
         if (parts.size() == 2) {
             QString hash = parts[0];
             QString timeAgo = parts[1];
-            return QStringLiteral("%1 • %2").arg(hash, timeAgo);
+            return QStringLiteral("%2 • %1").arg(hash, timeAgo);
         } else {
             return i18n("Git: No commits");
         }
