@@ -102,13 +102,13 @@ void MainWindow::setupActions()
     auto *refreshAction = actionCollection()->addAction(QStringLiteral("refresh"));
     refreshAction->setText(i18n("&Refresh Files"));
     refreshAction->setIcon(QIcon::fromTheme(QStringLiteral("view-refresh")));
-    refreshAction->setShortcut(QKeySequence::Refresh);
+    KActionCollection::setDefaultShortcut(refreshAction, QKeySequence::Refresh);
     connect(refreshAction, &QAction::triggered, this, &MainWindow::refreshFiles);
     
     auto *syncAction = actionCollection()->addAction(QStringLiteral("sync"));
     syncAction->setText(i18n("&Sync Files"));
     syncAction->setIcon(QIcon::fromTheme(QStringLiteral("folder-sync")));
-    syncAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
+    KActionCollection::setDefaultShortcut(syncAction, QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(syncAction, &QAction::triggered, this, &MainWindow::syncFiles);
     
     // Settings menu
@@ -124,7 +124,8 @@ void MainWindow::setupActions()
     // Help menu
     KStandardAction::aboutApp(this, &MainWindow::showAbout, actionCollection());
     
-    setupGUI(Default, "dotweaver.xml"_L1);
+    // Load UI from embedded resource
+    setupGUI(Default, QStringLiteral(":/src/ui/dotweaverui.rc"));
 }
 
 void MainWindow::openSettings()

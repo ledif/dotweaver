@@ -25,19 +25,19 @@ int main(int argc, char *argv[])
         i18n("DotWeaver"),
         QStringLiteral(DOTWEAVER_VERSION_STRING),
         i18n("A modern dotfile management application powered by chezmoi"),
-        KAboutLicense::GPL_V3,
-        i18n("Copyright 2025, DotWeaver contributors")
+        KAboutLicense::MIT,
+        i18n("(c) 2025 Adam Fidel")
     );
     
     aboutData.addAuthor(
         i18n("DotWeaver Team"),
-        i18n("Developer"),
-        QStringLiteral("team@dotweaver.app")
+        i18n("Adam Fidel"),
+        QStringLiteral("adam@fidel.cloud")
     );
     
-    aboutData.setHomepage(QStringLiteral("https://github.com/dotweaver/dotweaver"));
-    aboutData.setBugAddress("https://github.com/dotweaver/dotweaver/issues");
-    aboutData.setDesktopFileName(QStringLiteral("org.dotweaver"));
+    aboutData.setHomepage(QStringLiteral("https://github.com/ledif/dotweaver"));
+    aboutData.setBugAddress("https://github.com/ledif/dotweaver/issues");
+    aboutData.setDesktopFileName(QStringLiteral("io.github.ledif.dotweaver"));
     
     KAboutData::setApplicationData(aboutData);
     
