@@ -1,0 +1,36 @@
+FROM registry.fedoraproject.org/fedora:39
+
+# Install development dependencies
+RUN dnf update -y && \
+    dnf install -y \
+        cmake \
+        make \
+        gcc-c++ \
+        qt6-qtbase-devel \
+        qt6-qtwidgets-devel \
+        qt6-qtdeclarative-devel \
+        kf6-kcoreaddons-devel \
+        kf6-ki18n-devel \
+        kf6-kconfig-devel \
+        kf6-kconfigwidgets-devel \
+        kf6-kxmlgui-devel \
+        kf6-kio-devel \
+        kf6-kiconthemes-devel \
+        kf6-kwidgetsaddons-devel \
+        kf6-ktextwidgets-devel \
+        kf6-knotifications-devel \
+        extra-cmake-modules \
+        clang-tools-extra \
+        clang-format \
+        git \
+        just \
+        flatpak-builder \
+        appstream \
+        desktop-file-utils \
+    && dnf clean all
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Default command
+CMD ["/bin/bash"]

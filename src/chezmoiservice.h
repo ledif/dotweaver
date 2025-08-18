@@ -1,0 +1,54 @@
+#ifndef CHEZMOISERVICE_H
+#define CHEZMOISERVICE_H
+
+#include <QObject>
+#include <QProcess>
+#include <QStringList>
+#include <QFileInfo>
+
+class ChezmoiService : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit ChezmoiService(QObject *parent = nullptr);
+    ~ChezmoiService() override;
+
+    struct FileStatus {
+        QString path;
+        QString status; // "managed", "unmanaged", "modified", etc.
+        bool isTemplate;
+        QFileInfo sourceFile;
+        QFileInfo targetFile;
+    };
+
+    bool isChezmoiInitialized() const;
+    bool initializeRepository(const QString &repositoryUrl = QString());
+    QList<FileStatus> getManagedFiles();
+    bool addFile(const QString &filePath);
+    bool removeFile(const QString &filePath);
+    bool applyChanges();
+    bool updateRepository();
+    QString getChezmoiDirectory() const;
+    QString getConfigFile() const;
+
+signals:
+    void operationCompleted(bool success, const QString &message);
+    void fileStatusChanged(const QString &filePath, const QString &status);
+    void progressUpdated(int percentage);
+
+private slots:
+    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onProcessError(QProcess::ProcessError error);
+
+private:
+    bool runChezmoiCommand(const QStringList &arguments, bool async = false);
+    QString getChezmoiExecutable() const;
+    void parseStatusOutput(const QString &output);
+
+    QProcess *m_process;
+    QString m_chezmoiPath;
+    QString m_currentOperation;
+};
+
+#endif // CHEZMOISERVICE_H

@@ -1,0 +1,37 @@
+# Build directories
+build/
+build-*/
+*build*/
+
+# IDE files
+.vscode/
+.idea/
+*.user
+*.pro.user*
+
+# Qt/KDE
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+*.qm
+
+# Flatpak
+build-flatpak/
+.flatpak-builder/
+
+# Container artifacts
+.podman/
+
+# Temporary files
+*~
+*.swp
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+*.orig

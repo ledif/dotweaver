@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=KChezmoi
+GenericName=Dotfile Manager
+Comment=Manage your dotfiles with chezmoi
+Comment[es]=Administra tus dotfiles con chezmoi
+Comment[fr]=Gérez vos dotfiles avec chezmoi
+Comment[de]=Verwalte deine Dotfiles mit chezmoi
+Icon=kchezmoi
+Exec=kchezmoi
+Categories=Qt;KDE;Settings;System;
+Keywords=dotfiles;chezmoi;configuration;settings;
+StartupNotify=true
+X-DBUS-StartupType=Unique
+X-KDE-SubstituteUID=false
