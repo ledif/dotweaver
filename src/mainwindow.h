@@ -7,8 +7,8 @@
 
 class QTreeView;
 class QTextEdit;
-class QListWidget;
 class QTabWidget;
+class QLabel;
 class ChezmoiService;
 class DotfileManager;
 class ConfigEditor;
@@ -34,11 +34,17 @@ private Q_SLOTS:
 private:
     void setupUI();
     void setupActions();
+    void setupStatusBar();
+    void updateGitStatus();
     void loadDotfiles();
 
     QTreeView *m_fileTreeView;
     QTabWidget *m_editorTabs;
-    QListWidget *m_statusList;
+    
+    // Status bar widgets
+    QLabel *m_statusLeft;
+    QLabel *m_statusCenter;
+    QLabel *m_statusRight;
     
     std::unique_ptr<ChezmoiService> m_chezmoiService;
     std::unique_ptr<DotfileManager> m_dotfileManager;
