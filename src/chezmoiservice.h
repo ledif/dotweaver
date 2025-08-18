@@ -34,6 +34,10 @@ public:
     bool updateRepository();
     QString getChezmoiDirectory() const;
     QString getConfigFile() const;
+    QString getCatFileContent(const QString &filePath);
+    QString getSourcePath(const QString &filePath);
+    QString getDestinationDirectory() const;
+    QString convertToTargetPath(const QString &sourcePath) const;
 
 Q_SIGNALS:
     void operationCompleted(bool success, const QString &message);

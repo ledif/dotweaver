@@ -2,6 +2,7 @@
 #include "chezmoiservice.h"
 #include "dotfilemanager.h"
 #include "configeditor.h"
+#include "filetab.h"
 #include "logger.h"
 #include "logviewer.h"
 #include "statusbar.h"
@@ -92,9 +93,19 @@ void MainWindow::setupUI()
     connect(m_fileTreeView, &QTreeView::customContextMenuRequested, 
             this, &MainWindow::showTreeContextMenu);
     
+    // Connect file double-click to open in tab
+    connect(m_fileTreeView, &QTreeView::doubleClicked,
+            this, &MainWindow::onFileDoubleClicked);
+    
     // Right panel - Editor tabs
     m_editorTabs = new QTabWidget(this);
     m_editorTabs->setTabsClosable(true);
+    m_editorTabs->setMovable(true);
+    m_editorTabs->setDocumentMode(true);
+    
+    // Connect tab close signal
+    connect(m_editorTabs, &QTabWidget::tabCloseRequested,
+            this, &MainWindow::onTabCloseRequested);
     
     // Add widgets to splitter
     m_splitter->addWidget(m_fileTreeView);
@@ -275,7 +286,86 @@ void MainWindow::showLogViewer()
 void MainWindow::onFileSelected(const QString &filePath)
 {
     m_currentFile = filePath;
-    // TODO: Open file in editor tab
+    LOG_DEBUG(QStringLiteral("File selected: %1").arg(filePath));
+}
+
+void MainWindow::onFileDoubleClicked(const QModelIndex &index)
+{
+    if (!index.isValid() || !m_dotfileManager) {
+        return;
+    }
+    
+    // Get the file path from the model
+    QString filePath = m_dotfileManager->getFilePath(index);
+    if (filePath.isEmpty()) {
+        LOG_DEBUG("Double-clicked item has no file path (likely a directory)"_L1);
+        return;
+    }
+    
+    // Convert source path to target path for display/editing
+    QString targetPath = m_chezmoiService->convertToTargetPath(filePath);
+    
+    LOG_INFO(QStringLiteral("Double-clicked file: %1 -> target: %2").arg(filePath, targetPath));
+    openFileInTab(targetPath);
+}
+
+void MainWindow::onTabCloseRequested(int index)
+{
+    if (index < 0 || index >= m_editorTabs->count()) {
+        return;
+    }
+    
+    QWidget *tab = m_editorTabs->widget(index);
+    if (auto *fileTab = qobject_cast<FileTab*>(tab)) {
+        LOG_INFO(QStringLiteral("Closing tab for file: %1").arg(fileTab->filePath()));
+    }
+    
+    m_editorTabs->removeTab(index);
+    tab->deleteLater();
+}
+
+void MainWindow::openFileInTab(const QString &filePath)
+{
+    if (filePath.isEmpty()) {
+        LOG_WARNING("Cannot open tab: file path is empty"_L1);
+        return;
+    }
+    
+    // Check if tab is already open
+    FileTab *existingTab = findTabByFilePath(filePath);
+    if (existingTab) {
+        // Switch to existing tab
+        int tabIndex = m_editorTabs->indexOf(existingTab);
+        if (tabIndex >= 0) {
+            m_editorTabs->setCurrentIndex(tabIndex);
+            LOG_DEBUG(QStringLiteral("Switched to existing tab for file: %1").arg(filePath));
+            return;
+        }
+    }
+    
+    // Create new tab
+    auto *fileTab = new FileTab(filePath, m_chezmoiService.get(), this);
+    int tabIndex = m_editorTabs->addTab(fileTab, fileTab->fileName());
+    
+    // Set tooltip to show full path
+    m_editorTabs->setTabToolTip(tabIndex, filePath);
+    
+    // Switch to the new tab
+    m_editorTabs->setCurrentIndex(tabIndex);
+    
+    LOG_INFO(QStringLiteral("Opened new tab for file: %1").arg(filePath));
+}
+
+FileTab* MainWindow::findTabByFilePath(const QString &filePath)
+{
+    for (int i = 0; i < m_editorTabs->count(); ++i) {
+        if (auto *fileTab = qobject_cast<FileTab*>(m_editorTabs->widget(i))) {
+            if (fileTab->filePath() == filePath) {
+                return fileTab;
+            }
+        }
+    }
+    return nullptr;
 }
 
 void MainWindow::onFileModified()

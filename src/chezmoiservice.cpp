@@ -339,3 +339,129 @@ void ChezmoiService::onProcessError(QProcess::ProcessError error)
     Q_EMIT operationCompleted(false, errorMessage);
     m_currentOperation.clear();
 }
+
+QString ChezmoiService::getCatFileContent(const QString &filePath)
+{
+    if (m_chezmoiPath.isEmpty()) {
+        LOG_ERROR("Cannot get file content: chezmoi executable not found"_L1);
+        return QString();
+    }
+    
+    LOG_DEBUG(QStringLiteral("Getting file content via chezmoi cat: %1").arg(filePath));
+    
+    if (!runChezmoiCommand({QStringLiteral("cat"), filePath}, false)) {
+        LOG_WARNING(QStringLiteral("Failed to run 'chezmoi cat' for file: %1").arg(filePath));
+        return QString();
+    }
+    
+    QString content = QString::fromUtf8(m_process->readAllStandardOutput());
+    LOG_DEBUG(QStringLiteral("Retrieved content (%1 chars) for file: %2").arg(content.length()).arg(filePath));
+    
+    return content;
+}
+
+QString ChezmoiService::getSourcePath(const QString &filePath)
+{
+    if (m_chezmoiPath.isEmpty()) {
+        LOG_ERROR("Cannot get source path: chezmoi executable not found"_L1);
+        return QString();
+    }
+    
+    LOG_DEBUG(QStringLiteral("Getting source path for file: %1").arg(filePath));
+    
+    if (!runChezmoiCommand({QStringLiteral("source-path"), filePath}, false)) {
+        LOG_WARNING(QStringLiteral("Failed to run 'chezmoi source-path' for file: %1").arg(filePath));
+        return QString();
+    }
+    
+    QString sourcePath = QString::fromUtf8(m_process->readAllStandardOutput()).trimmed();
+    LOG_DEBUG(QStringLiteral("Source path for %1: %2").arg(filePath, sourcePath));
+    
+    return sourcePath;
+}
+
+QString ChezmoiService::getDestinationDirectory() const
+{
+    if (m_chezmoiPath.isEmpty()) {
+        LOG_ERROR("Cannot get destination directory: chezmoi executable not found"_L1);
+        return QString();
+    }
+    
+    LOG_DEBUG("Getting destination directory from chezmoi config"_L1);
+    
+    // Use a temporary process since we need this to be synchronous and not interfere with m_process
+    QProcess tempProcess;
+    tempProcess.start(m_chezmoiPath, {QStringLiteral("dump-config"), QStringLiteral("--format=json")});
+    
+    if (!tempProcess.waitForFinished() || tempProcess.exitCode() != 0) {
+        LOG_WARNING("Failed to get chezmoi config, falling back to home directory"_L1);
+        return QDir::homePath();
+    }
+    
+    QString output = QString::fromUtf8(tempProcess.readAllStandardOutput());
+    
+    // Parse the JSON to extract destDir
+    // Simple parsing since we only need destDir
+    QRegularExpression destDirRegex(QStringLiteral("\"destDir\"\\s*:\\s*\"([^\"]+)\""));
+    QRegularExpressionMatch match = destDirRegex.match(output);
+    
+    if (match.hasMatch()) {
+        QString destDir = match.captured(1);
+        LOG_DEBUG(QStringLiteral("Found destination directory: %1").arg(destDir));
+        return destDir;
+    }
+    
+    LOG_WARNING("Could not parse destDir from chezmoi config, falling back to home directory"_L1);
+    return QDir::homePath();
+}
+
+QString ChezmoiService::convertToTargetPath(const QString &sourcePath) const
+{
+    if (sourcePath.isEmpty()) {
+        return QString();
+    }
+    
+    QString sourceDir = getChezmoiDirectory();
+    QString destDir = getDestinationDirectory();
+    
+    if (sourceDir.isEmpty() || destDir.isEmpty()) {
+        LOG_WARNING("Cannot convert path: missing source or destination directory"_L1);
+        return sourcePath;
+    }
+    
+    // Check if the path is actually a source path
+    if (!sourcePath.startsWith(sourceDir)) {
+        // It might already be a target path or a relative path
+        LOG_DEBUG(QStringLiteral("Path doesn't start with source directory, assuming it's already a target path: %1").arg(sourcePath));
+        return sourcePath;
+    }
+    
+    // Remove the source directory prefix and the leading slash
+    QString relativePath = sourcePath.mid(sourceDir.length());
+    if (relativePath.startsWith(u'/')) {
+        relativePath = relativePath.mid(1);
+    }
+    
+    // Remove chezmoi prefixes from the filename
+    // This is a simplified conversion - chezmoi has complex rules for filename mapping
+    QStringList pathComponents = relativePath.split(u'/');
+    for (QString &component : pathComponents) {
+        // Remove common chezmoi prefixes
+        if (component.startsWith(QStringLiteral("dot_"))) {
+            component = u'.' + component.mid(4);
+        } else if (component.startsWith(QStringLiteral("private_"))) {
+            component = component.mid(8);
+        } else if (component.startsWith(QStringLiteral("executable_"))) {
+            component = component.mid(11);
+        }
+        // Remove .tmpl suffix for templates
+        if (component.endsWith(QStringLiteral(".tmpl"))) {
+            component = component.left(component.length() - 5);
+        }
+    }
+    
+    QString targetPath = destDir + u'/' + pathComponents.join(u'/');
+    LOG_DEBUG(QStringLiteral("Converted source path %1 to target path %2").arg(sourcePath, targetPath));
+    
+    return targetPath;
+}

@@ -11,6 +11,7 @@
 class QTreeView;
 class QTextEdit;
 class QTabWidget;
+class FileTab;
 class ChezmoiService;
 class DotfileManager;
 class ConfigEditor;
@@ -34,6 +35,8 @@ private Q_SLOTS:
     void collapseAllItems();
     void showTreeContextMenu(const QPoint &position);
     void onFileSelected(const QString &filePath);
+    void onFileDoubleClicked(const QModelIndex &index);
+    void onTabCloseRequested(int index);
     void onFileModified();
 
 private:
@@ -41,6 +44,8 @@ private:
     void setupActions();
     void setupStatusBar();
     void loadDotfiles();
+    void openFileInTab(const QString &filePath);
+    FileTab* findTabByFilePath(const QString &filePath);
 
     QTreeView *m_fileTreeView;
     QTabWidget *m_editorTabs;

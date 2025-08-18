@@ -8,6 +8,8 @@ add_executable(dotweaver
     dotfilemanager.h
     configeditor.cpp
     configeditor.h
+    filetab.cpp
+    filetab.h
     logger.cpp
     logger.h
     logviewer.cpp
