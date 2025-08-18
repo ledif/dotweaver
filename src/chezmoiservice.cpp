@@ -79,8 +79,8 @@ QList<ChezmoiService::FileStatus> ChezmoiService::getManagedFiles()
         return files;
     }
     
-    if (!runChezmoiCommand({QStringLiteral("managed")}, false)) {
-        LOG_ERROR("Failed to run 'chezmoi managed' command"_L1);
+    if (!runChezmoiCommand({QStringLiteral("managed"), QStringLiteral("--exclude=dirs")}, false)) {
+        LOG_ERROR("Failed to run 'chezmoi managed --exclude=dirs' command"_L1);
         return files;
     }
     

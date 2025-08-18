@@ -86,12 +86,11 @@ void DotfileManager::addFileToTree(const QString &relativePath, const QString &f
         LOG_DEBUG(QStringLiteral("DotfileManager: Created/found parent: %1").arg(pathParts[i]));
     }
     
-    // Add the file
     auto *fileItem = new DotfileItem(pathParts.last(), currentParent);
     fileItem->fullPath = fullPath;
     fileItem->status = status;
     fileItem->isTemplate = isTemplate;
-    fileItem->isDirectory = QFileInfo(fullPath).isDir();
+    fileItem->isDirectory = false; // chezmoi excluded directories, so this is always a file/symlink
     
     currentParent->children.append(fileItem);
     LOG_DEBUG(QStringLiteral("DotfileManager: Added file item: %1 (parent has %2 children)").arg(pathParts.last()).arg(currentParent->children.size()));
