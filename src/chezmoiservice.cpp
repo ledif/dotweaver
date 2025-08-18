@@ -30,13 +30,13 @@ QString ChezmoiService::getChezmoiExecutable() const
 bool ChezmoiService::isChezmoiInitialized() const
 {
     QString chezmoiDir = getChezmoiDirectory();
-    return QDir(chezmoiDir).exists() && QDir(chezmoiDir + "/.git").exists();
+    return QDir(chezmoiDir).exists() && QDir(chezmoiDir + QStringLiteral("/.git")).exists();
 }
 
 bool ChezmoiService::initializeRepository(const QString &repositoryUrl)
 {
     if (m_chezmoiPath.isEmpty()) {
-        emit operationCompleted(false, QStringLiteral("chezmoi executable not found"));
+        Q_EMIT operationCompleted(false, QStringLiteral("chezmoi executable not found"));
         return false;
     }
     
@@ -75,11 +75,11 @@ QList<ChezmoiService::FileStatus> ChezmoiService::getManagedFiles()
         
         // Get source file info
         QString sourceDir = getChezmoiDirectory();
-        QString sourcePath = sourceDir + "/" + status.path;
+        QString sourcePath = sourceDir + QStringLiteral("/") + status.path;
         status.sourceFile = QFileInfo(sourcePath);
         
         // Get target file info
-        QString targetPath = QDir::homePath() + "/" + status.path;
+        QString targetPath = QDir::homePath() + QStringLiteral("/") + status.path;
         status.targetFile = QFileInfo(targetPath);
         
         files.append(status);
@@ -139,7 +139,7 @@ QString ChezmoiService::getChezmoiDirectory() const
     }
     
     // Fallback to default location
-    return QDir::homePath() + "/.local/share/chezmoi";
+    return QDir::homePath() + QStringLiteral("/.local/share/chezmoi");
 }
 
 QString ChezmoiService::getConfigFile() const
@@ -153,7 +153,7 @@ QString ChezmoiService::getConfigFile() const
         // For now, return the default location
     }
     
-    return QDir::homePath() + "/.config/chezmoi/chezmoi.toml";
+    return QDir::homePath() + QStringLiteral("/.config/chezmoi/chezmoi.toml");
 }
 
 bool ChezmoiService::runChezmoiCommand(const QStringList &arguments, bool async)
@@ -183,7 +183,7 @@ void ChezmoiService::onProcessFinished(int exitCode, QProcess::ExitStatus exitSt
         message = QStringLiteral("Operation '%1' failed: %2").arg(m_currentOperation, errorOutput);
     }
     
-    emit operationCompleted(success, message);
+    Q_EMIT operationCompleted(success, message);
     m_currentOperation.clear();
 }
 
@@ -205,6 +205,6 @@ void ChezmoiService::onProcessError(QProcess::ProcessError error)
         break;
     }
     
-    emit operationCompleted(false, errorMessage);
+    Q_EMIT operationCompleted(false, errorMessage);
     m_currentOperation.clear();
 }

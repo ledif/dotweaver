@@ -5,7 +5,7 @@ class TestChezmoiService : public QObject
 {
     Q_OBJECT
 
-private slots:
+private Q_SLOTS:
     void testExecutablePath();
     void testDirectoryPath();
     void testInitialization();
@@ -19,7 +19,7 @@ void TestChezmoiService::testExecutablePath()
     service = new ChezmoiService(this);
     
     // Test that we can find or at least attempt to find chezmoi
-    QString executablePath = QStandardPaths::findExecutable("chezmoi");
+    QString executablePath = QStandardPaths::findExecutable(QStringLiteral("chezmoi"));
     
     // This test will pass even if chezmoi is not installed
     // It just checks that the service can handle the case gracefully
@@ -36,7 +36,7 @@ void TestChezmoiService::testDirectoryPath()
     QVERIFY(!chezmoiDir.isEmpty());
     
     // Should contain a valid path (even if directory doesn't exist)
-    QVERIFY(chezmoiDir.contains("chezmoi"));
+    QVERIFY(chezmoiDir.contains(QStringLiteral("chezmoi")));
     
     delete service;
 }

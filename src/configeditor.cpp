@@ -156,10 +156,10 @@ void ConfigEditor::connectSignals()
 
 void ConfigEditor::loadConfiguration()
 {
-    QSettings settings(QStringLiteral("KChezmoi"), QStringLiteral("KChezmoi"));
+    QSettings settings(QStringLiteral("DotWeaver"), QStringLiteral("DotWeaver"));
     
     // General settings
-    QString defaultSourceDir = QDir::homePath() + "/.local/share/chezmoi";
+    QString defaultSourceDir = QDir::homePath() + QStringLiteral("/.local/share/chezmoi");
     m_sourceDirectoryEdit->setText(settings.value(QStringLiteral("sourceDirectory"), defaultSourceDir).toString());
     m_workingTreeEdit->setText(settings.value(QStringLiteral("workingTree"), QDir::homePath()).toString());
     m_useBuiltinGitCheck->setChecked(settings.value(QStringLiteral("useBuiltinGit"), true).toBool());
@@ -192,7 +192,7 @@ void ConfigEditor::loadConfiguration()
 
 void ConfigEditor::saveConfiguration()
 {
-    QSettings settings(QStringLiteral("KChezmoi"), QStringLiteral("KChezmoi"));
+    QSettings settings(QStringLiteral("DotWeaver"), QStringLiteral("DotWeaver"));
     
     // General settings
     settings.setValue(QStringLiteral("sourceDirectory"), m_sourceDirectoryEdit->text());
@@ -221,5 +221,5 @@ void ConfigEditor::saveConfiguration()
 void ConfigEditor::onConfigValueChanged()
 {
     saveConfiguration();
-    emit configurationChanged();
+    Q_EMIT configurationChanged();
 }

@@ -22,10 +22,10 @@ public:
     void loadConfiguration();
     void saveConfiguration();
 
-signals:
+Q_SIGNALS:
     void configurationChanged();
 
-private slots:
+private Q_SLOTS:
     void onConfigValueChanged();
 
 private:

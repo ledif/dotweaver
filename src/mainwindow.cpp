@@ -13,6 +13,9 @@
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QStatusBar>
+
+#include <KAboutApplicationDialog>
+#include <KAboutData>
 #include <QProgressBar>
 #include <QLabel>
 #include <QMenuBar>
@@ -86,7 +89,7 @@ void MainWindow::setupUI()
     m_mainSplitter->addWidget(rightWidget);
     m_mainSplitter->setSizes({250, 600});
     
-    setWindowTitle(i18n("KChezmoi - Dotfile Manager"));
+    setWindowTitle(i18n("DotWeaver - Dotfile Manager"));
     resize(1000, 700);
 }
 
@@ -104,7 +107,7 @@ void MainWindow::setupActions()
     auto *syncAction = actionCollection()->addAction(QStringLiteral("sync"));
     syncAction->setText(i18n("&Sync Files"));
     syncAction->setIcon(QIcon::fromTheme(QStringLiteral("folder-sync")));
-    syncAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+    syncAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(syncAction, &QAction::triggered, this, &MainWindow::syncFiles);
     
     // Settings menu
@@ -151,11 +154,8 @@ void MainWindow::syncFiles()
 
 void MainWindow::showAbout()
 {
-    KMessageBox::about(this, 
-        i18n("KChezmoi is a KDE application for managing dotfiles with chezmoi.\n\n"
-             "It provides an intuitive interface for editing, viewing, and synchronizing "
-             "configuration files across different systems."),
-        i18n("About KChezmoi"));
+    KAboutApplicationDialog dialog(KAboutData::applicationData(), this);
+    dialog.exec();
 }
 
 void MainWindow::onFileSelected(const QString &filePath)

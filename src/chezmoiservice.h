@@ -32,12 +32,12 @@ public:
     QString getChezmoiDirectory() const;
     QString getConfigFile() const;
 
-signals:
+Q_SIGNALS:
     void operationCompleted(bool success, const QString &message);
     void fileStatusChanged(const QString &filePath, const QString &status);
     void progressUpdated(int percentage);
 
-private slots:
+private Q_SLOTS:
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void onProcessError(QProcess::ProcessError error);
 

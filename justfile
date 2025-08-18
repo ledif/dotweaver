@@ -1,4 +1,4 @@
-# KChezmoi - A KDE application for managing dotfiles with chezmoi
+# DotWeaver - A modern dotfile management application powered by chezmoi
 # Build and development management with justfile
 
 # Default recipe - show available commands
@@ -7,9 +7,9 @@ default:
 
 # Build the application in container
 build:
-    @echo "Building KChezmoi in container..."
-    podman build -t kchezmoi-dev -f Containerfile.dev .
-    podman run --rm -v $(pwd):/workspace:Z -w /workspace kchezmoi-dev just _build-native
+    @echo "Building DotWeaver in container..."
+    podman build -t dotweaver-dev -f Containerfile.dev .
+    podman run --rm -v $(pwd):/workspace:Z -w /workspace dotweaver-dev just _build-native
 
 # Internal build command (runs inside container)
 _build-native:
@@ -19,9 +19,9 @@ _build-native:
 
 # Build release version
 build-release:
-    @echo "Building KChezmoi release in container..."
-    podman build -t kchezmoi-dev -f Containerfile.dev .
-    podman run --rm -v $(pwd):/workspace:Z -w /workspace kchezmoi-dev just _build-release-native
+    @echo "Building DotWeaver release in container..."
+    podman build -t dotweaver-dev -f Containerfile.dev .
+    podman run --rm -v $(pwd):/workspace:Z -w /workspace dotweaver-dev just _build-release-native
 
 _build-release-native:
     mkdir -p build-release
@@ -30,8 +30,8 @@ _build-release-native:
 
 # Run the application
 run: build
-    @echo "Running KChezmoi..."
-    ./build/src/kchezmoi
+    @echo "Running DotWeaver..."
+    ./build/src/dotweaver
 
 # Clean build artifacts
 clean:
@@ -50,13 +50,13 @@ test: build
 # Development shell in container
 dev-shell:
     @echo "Starting development shell..."
-    podman build -t kchezmoi-dev -f Containerfile.dev .
-    podman run -it --rm -v $(pwd):/workspace:Z -w /workspace kchezmoi-dev bash
+    podman build -t dotweaver-dev -f Containerfile.dev .
+    podman run -it --rm -v $(pwd):/workspace:Z -w /workspace dotweaver-dev bash
 
 # Build Flatpak
 flatpak-build:
     @echo "Building Flatpak..."
-    flatpak-builder --force-clean build-flatpak org.kde.kchezmoi.yml
+    flatpak-builder --force-clean build-flatpak org.dotweaver.yml
 
 # Install Flatpak locally
 flatpak-install: flatpak-build

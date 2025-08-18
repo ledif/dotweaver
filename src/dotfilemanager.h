@@ -24,7 +24,7 @@ public:
         DotfileItem *parent;
         
         DotfileItem(const QString &n = QString(), DotfileItem *p = nullptr)
-            : name(n), parent(p), isDirectory(false), isTemplate(false) {}
+            : name(n), isDirectory(false), isTemplate(false), parent(p) {}
         
         ~DotfileItem() {
             qDeleteAll(children);
@@ -47,11 +47,11 @@ public:
     QString getFilePath(const QModelIndex &index) const;
     bool isTemplate(const QModelIndex &index) const;
 
-signals:
+Q_SIGNALS:
     void fileModified(const QString &filePath);
     void filesRefreshed();
 
-private slots:
+private Q_SLOTS:
     void onFileChanged(const QString &path);
     void onDirectoryChanged(const QString &path);
 

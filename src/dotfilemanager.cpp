@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QIcon>
 #include <QDebug>
+#include <QStringList>
 
 DotfileManager::DotfileManager(QObject *parent)
     : QAbstractItemModel(parent)
@@ -52,7 +53,7 @@ void DotfileManager::refreshFiles()
     buildFileTree();
     
     endResetModel();
-    emit filesRefreshed();
+    Q_EMIT filesRefreshed();
 }
 
 void DotfileManager::buildFileTree()
@@ -81,7 +82,7 @@ void DotfileManager::buildFileTree()
 
 void DotfileManager::addFileToTree(const QString &relativePath, const QString &fullPath, const QString &status, bool isTemplate)
 {
-    QStringList pathParts = relativePath.split('/', Qt::SkipEmptyParts);
+    QStringList pathParts = relativePath.split(QLatin1Char('/'), Qt::SkipEmptyParts);
     if (pathParts.isEmpty()) {
         return;
     }
@@ -251,7 +252,7 @@ DotfileManager::DotfileItem *DotfileManager::getItem(const QModelIndex &index) c
 
 void DotfileManager::onFileChanged(const QString &path)
 {
-    emit fileModified(path);
+    Q_EMIT fileModified(path);
 }
 
 void DotfileManager::onDirectoryChanged(const QString &path)

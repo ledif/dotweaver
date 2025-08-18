@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=DotWeaver
+GenericName=Dotfile Manager
+Comment=A modern dotfile management application powered by chezmoi
+Comment[es]=Una aplicación moderna para gestionar dotfiles con chezmoi
+Comment[fr]=Une application moderne de gestion de dotfiles avec chezmoi
+Comment[de]=Eine moderne Anwendung zur Verwaltung von Dotfiles mit chezmoi
+Icon=dotweaver
+Exec=dotweaver
+Categories=Qt;Utility;Settings;System;
+Keywords=dotfiles;chezmoi;configuration;settings;config;dotweaver;
+StartupNotify=true
+X-DBUS-StartupType=Unique
+MimeType=application/x-chezmoi-config;

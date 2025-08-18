@@ -5,32 +5,32 @@
 #include <QDebug>
 
 #include "mainwindow.h"
-#include "kchezmoi_version.h"
+#include "dotweaver_version.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     
-    KLocalizedString::setApplicationDomain("kchezmoi");
+    KLocalizedString::setApplicationDomain("dotweaver");
     
     KAboutData aboutData(
-        QStringLiteral("kchezmoi"),
-        i18n("KChezmoi"),
-        QStringLiteral(KCHEZMOI_VERSION_STRING),
-        i18n("A KDE application for managing dotfiles with chezmoi"),
+        QStringLiteral("dotweaver"),
+        i18n("DotWeaver"),
+        QStringLiteral(DOTWEAVER_VERSION_STRING),
+        i18n("A modern dotfile management application powered by chezmoi"),
         KAboutLicense::GPL_V3,
-        i18n("Copyright 2025, KChezmoi developers")
+        i18n("Copyright 2025, DotWeaver contributors")
     );
     
     aboutData.addAuthor(
-        i18n("KChezmoi Team"),
+        i18n("DotWeaver Team"),
         i18n("Developer"),
-        QStringLiteral("team@kchezmoi.org")
+        QStringLiteral("team@dotweaver.app")
     );
     
-    aboutData.setHomepage(QStringLiteral("https://github.com/kde/kchezmoi"));
-    aboutData.setBugAddress(QStringLiteral("https://github.com/kde/kchezmoi/issues"));
-    aboutData.setDesktopFileName(QStringLiteral("org.kde.kchezmoi"));
+    aboutData.setHomepage(QStringLiteral("https://github.com/dotweaver/dotweaver"));
+    aboutData.setBugAddress("https://github.com/dotweaver/dotweaver/issues");
+    aboutData.setDesktopFileName(QStringLiteral("org.dotweaver"));
     
     KAboutData::setApplicationData(aboutData);
     

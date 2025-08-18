@@ -21,7 +21,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
-private slots:
+private Q_SLOTS:
     void openSettings();
     void refreshFiles();
     void syncFiles();

@@ -7,7 +7,7 @@ class TestDotfileManager : public QObject
 {
     Q_OBJECT
 
-private slots:
+private Q_SLOTS:
     void testModelStructure();
     void testFileHandling();
 
@@ -31,9 +31,9 @@ void TestDotfileManager::testModelStructure()
     QCOMPARE(manager->columnCount(), 3);
     
     // Test header data
-    QCOMPARE(manager->headerData(0, Qt::Horizontal).toString(), QString("Name"));
-    QCOMPARE(manager->headerData(1, Qt::Horizontal).toString(), QString("Status"));
-    QCOMPARE(manager->headerData(2, Qt::Horizontal).toString(), QString("Type"));
+    QCOMPARE(manager->headerData(0, Qt::Horizontal).toString(), QStringLiteral("Name"));
+    QCOMPARE(manager->headerData(1, Qt::Horizontal).toString(), QStringLiteral("Status"));
+    QCOMPARE(manager->headerData(2, Qt::Horizontal).toString(), QStringLiteral("Type"));
     
     delete manager;
     delete service;

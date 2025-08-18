@@ -1,6 +1,10 @@
-# KChezmoi
+# DotWeaver
 
-A KDE application for managing dotfiles with chezmoi. KChezmoi provides an intuitive graphical interface for editing, viewing, and synchronizing configuration files across different systems using the powerful chezmoi tool.
+**A modern dotfile management application powered by chezmoi**
+
+DotWeaver provides an intuitive graphical interface for managing your configuration files (dotfiles) using the powerful [chezmoi](https://chezmoi.io) backend. Built with Qt6 and KDE Frameworks for a native Linux desktop experience.
+
+> **Note**: DotWeaver is a community project that uses KDE Frameworks for its UI components. It is not an official KDE project, but follows KDE's Human Interface Guidelines to provide a consistent desktop experience.
 
 ## Features
 
