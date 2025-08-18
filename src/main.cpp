@@ -11,6 +11,10 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     
+    // Set application icon
+    QIcon appIcon = QIcon::fromTheme(QStringLiteral("dotweaver"), QIcon(QStringLiteral(":/icons/dotweaver.png")));
+    app.setWindowIcon(appIcon);
+    
     KLocalizedString::setApplicationDomain("dotweaver");
     
     KAboutData aboutData(

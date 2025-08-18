@@ -119,5 +119,5 @@ This project is licensed under the GPL v3 - see the [LICENSE](LICENSE) file for 
 ## Acknowledgments
 
 - [chezmoi](https://github.com/twpayne/chezmoi) - The excellent dotfile manager that powers this application
-- KDE Community - For the fantastic frameworks and guidelines
+- Icon: https://www.flaticon.com/free-icon/weave_18878245
 - Qt Project - For the robust GUI toolkit

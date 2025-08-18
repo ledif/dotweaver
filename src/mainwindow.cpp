@@ -42,6 +42,10 @@ MainWindow::MainWindow(QWidget *parent)
     , m_configEditor(new ConfigEditor(this))
     , m_currentFile()
 {
+    // Set application icon
+    QIcon appIcon = QIcon::fromTheme(QStringLiteral("dotweaver"), QIcon(QStringLiteral(":/icons/dotweaver.png")));
+    setWindowIcon(appIcon);
+    
     setupUI();
     setupActions();
     setupStatusBar();
@@ -89,7 +93,7 @@ void MainWindow::setupUI()
     m_mainSplitter->addWidget(rightWidget);
     m_mainSplitter->setSizes({250, 600});
     
-    setWindowTitle(i18n("DotWeaver - Dotfile Manager"));
+    setWindowTitle(i18n("Home"));
     resize(1000, 700);
 }
 

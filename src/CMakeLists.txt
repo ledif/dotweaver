@@ -8,11 +8,13 @@ add_executable(dotweaver
     dotfilemanager.h
     configeditor.cpp
     configeditor.h
+    ../resources.qrc
 )
 
 # Enable Qt MOC for header files
 set_target_properties(dotweaver PROPERTIES
     AUTOMOC ON
+    AUTORCC ON
 )
 
 target_link_libraries(dotweaver
@@ -42,7 +44,8 @@ install(TARGETS dotweaver DESTINATION ${KDE_INSTALL_BINDIR})
 
 # Install desktop file and icons
 install(FILES org.dotweaver.desktop DESTINATION ${KDE_INSTALL_APPDIR})
-install(FILES ../icons/dotweaver.svg DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps/)
+install(FILES ../icons/dotweaver.png DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/256x256/apps/)
+install(FILES ../icons/dotweaver.svg DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps/ OPTIONAL)
 
 # Install UI files
 install(FILES ui/dotweaver.xml DESTINATION ${KDE_INSTALL_DATADIR}/dotweaver)
