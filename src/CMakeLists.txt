@@ -38,6 +38,7 @@ target_link_libraries(dotweaver
     KF6::IconThemes
     KF6::WidgetsAddons
     KF6::TextWidgets
+    KF6::TextEditor
     KF6::Notifications
 )
 

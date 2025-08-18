@@ -18,6 +18,7 @@ RUN dnf update -y && \
         kf6-kiconthemes-devel \
         kf6-kwidgetsaddons-devel \
         kf6-ktextwidgets-devel \
+        kf6-ktexteditor-devel \
         kf6-knotifications-devel \
         extra-cmake-modules \
         clang-tools-extra \

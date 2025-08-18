@@ -41,6 +41,7 @@ find_package(KF6 REQUIRED COMPONENTS
     IconThemes
     WidgetsAddons
     TextWidgets
+    TextEditor
     Notifications
 )
 

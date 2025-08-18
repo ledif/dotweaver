@@ -5,11 +5,15 @@
 #include <QString>
 #include <memory>
 
-class KTextEdit;
 class QPushButton;
 class QVBoxLayout;
 class QToolBar;
 class ChezmoiService;
+
+namespace KTextEditor {
+    class Document;
+    class View;
+}
 
 /**
  * @brief Widget representing a single file tab with read-only content and external editor option
@@ -40,7 +44,8 @@ private:
     QString m_fileName;
     ChezmoiService *m_chezmoiService;
     
-    KTextEdit *m_textEdit;
+    KTextEditor::Document *m_document;
+    KTextEditor::View *m_textView;
     QPushButton *m_openExternalButton;
     QVBoxLayout *m_mainLayout;
     QToolBar *m_bottomToolBar;
