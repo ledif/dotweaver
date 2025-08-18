@@ -8,6 +8,7 @@
 #include <QIcon>
 #include <QDebug>
 #include <QStringList>
+#include <QColor>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -205,6 +206,17 @@ QVariant DotfileManager::data(const QModelIndex &index, int role) const
         }
         break;
         
+    case Qt::ForegroundRole:
+        if (index.column() == 0) {
+            QColor itemColor = getItemColor(item);
+            // Only return a color if it's not the default (for special status files)
+            if (itemColor.isValid()) {
+                return itemColor;
+            }
+            // For normal files, don't return anything so Qt uses theme default
+        }
+        break;
+        
     case Qt::ToolTipRole:
         return item->fullPath;
     }
@@ -246,4 +258,46 @@ DotfileManager::DotfileItem *DotfileManager::getItem(const QModelIndex &index) c
         }
     }
     return m_rootItem.get();
+}
+
+QColor DotfileManager::getItemColor(DotfileItem *item) const
+{
+    if (!item) {
+        return QColor(); // Invalid color - use theme default
+    }
+    
+    // Colors similar to VS Code - only return valid colors for special status
+    if (item->status == u"modified"_s) {
+        return QColor(255, 193, 7); // Dark gold/amber for modified files
+    } else if (item->status == u"added"_s) {
+        return QColor(108, 218, 118); // Green for added files
+    } else if (item->status == u"deleted"_s) {
+        return QColor(248, 81, 73); // Red for deleted files
+    } else if (item->isDirectory && hasModifiedChildren(item)) {
+        return QColor(255, 193, 7); // Dark gold for directories with modified children
+    }
+    
+    // For normal/managed files, return invalid color so Qt uses theme default
+    return QColor();
+}
+
+bool DotfileManager::hasModifiedChildren(DotfileItem *item) const
+{
+    if (!item) {
+        return false;
+    }
+    
+    // Check if any direct children are modified
+    for (DotfileItem *child : item->children) {
+        if (child->status == u"modified"_s || child->status == u"added"_s || child->status == u"deleted"_s) {
+            return true;
+        }
+        
+        // Recursively check subdirectories
+        if (child->isDirectory && hasModifiedChildren(child)) {
+            return true;
+        }
+    }
+    
+    return false;
 }

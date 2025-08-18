@@ -78,49 +78,109 @@ QList<ChezmoiService::FileStatus> ChezmoiService::getManagedFiles()
         LOG_ERROR("Cannot get managed files: chezmoi executable not found"_L1);
         return files;
     }
-    
+
+    // First get the file statuses
+    QHash<QString, QString> fileStatuses = getFileStatuses();
+
     if (!runChezmoiCommand({QStringLiteral("managed"), QStringLiteral("--exclude=dirs")}, false)) {
         LOG_ERROR("Failed to run 'chezmoi managed --exclude=dirs' command"_L1);
         return files;
     }
-    
+
     QString output = QString::fromUtf8(m_process->readAllStandardOutput());
     LOG_INFO(QStringLiteral("Chezmoi managed command output (%1 chars):").arg(output.length()));
     LOG_INFO(output.isEmpty() ? "  (empty output)"_L1 : QStringLiteral("  %1").arg(output.left(200) + (output.length() > 200 ? "..."_L1 : ""_L1)));
-    
+
     QTextStream stream(&output);
     QString line;
     int fileCount = 0;
-    
+
     // Cache the source directory to avoid multiple calls
     QString sourceDir = getChezmoiDirectory();
+
+    while (stream.readLineInto(&line)) {
+        if (line.trimmed().isEmpty()) {
+            continue;
+        }
+
+        fileCount++;
+        LOG_DEBUG(QStringLiteral("Processing managed file: %1").arg(line.trimmed()));
+
+        FileStatus status;
+        status.path = line.trimmed();
+        
+        // Use actual status from chezmoi status, or default to "managed"
+        status.status = fileStatuses.value(status.path, u"managed"_s);
+        status.isTemplate = line.contains(u".tmpl"_s);
+
+        // Get source file info
+        QString sourcePath = sourceDir + QStringLiteral("/") + status.path;
+        status.sourceFile = QFileInfo(sourcePath);
+
+        // Get target file info
+        QString targetPath = QDir::homePath() + QStringLiteral("/") + status.path;
+        status.targetFile = QFileInfo(targetPath);
+
+        files.append(status);
+    }
+    
+    LOG_INFO(QStringLiteral("Found %1 managed files").arg(fileCount));
+    return files;
+}
+
+QHash<QString, QString> ChezmoiService::getFileStatuses()
+{
+    QHash<QString, QString> statuses;
+    
+    LOG_INFO("Getting file statuses from 'chezmoi status'"_L1);
+    
+    if (m_chezmoiPath.isEmpty()) {
+        LOG_ERROR("Cannot get file statuses: chezmoi executable not found"_L1);
+        return statuses;
+    }
+    
+    if (!runChezmoiCommand({QStringLiteral("status")}, false)) {
+        LOG_ERROR("Failed to run 'chezmoi status' command"_L1);
+        return statuses;
+    }
+    
+    QString output = QString::fromUtf8(m_process->readAllStandardOutput());
+    LOG_INFO(QStringLiteral("Chezmoi status command output (%1 chars):").arg(output.length()));
+    
+    QTextStream stream(&output);
+    QString line;
     
     while (stream.readLineInto(&line)) {
         if (line.trimmed().isEmpty()) {
             continue;
         }
         
-        fileCount++;
-        LOG_DEBUG(QStringLiteral("Processing managed file: %1").arg(line.trimmed()));
-        
-        FileStatus status;
-        status.path = line.trimmed();
-        status.status = QStringLiteral("managed");
-        status.isTemplate = line.contains(QStringLiteral(".tmpl"));
-        
-        // Get source file info
-        QString sourcePath = sourceDir + QStringLiteral("/") + status.path;
-        status.sourceFile = QFileInfo(sourcePath);
-        
-        // Get target file info
-        QString targetPath = QDir::homePath() + QStringLiteral("/") + status.path;
-        status.targetFile = QFileInfo(targetPath);
-        
-        files.append(status);
+        // Parse chezmoi status format: "MM filename"
+        // First character: difference between last written state and actual state
+        // Second character: difference between actual state and target state
+        if (line.length() >= 3) {
+            QString statusChars = line.left(2);
+            QString filePath = line.mid(3).trimmed();
+            
+            // Convert status characters to a descriptive status
+            QString status = u"unchanged"_s;
+            if (statusChars.contains(u'M')) {
+                status = u"modified"_s;
+            } else if (statusChars.contains(u'A')) {
+                status = u"added"_s;
+            } else if (statusChars.contains(u'D')) {
+                status = u"deleted"_s;
+            } else if (statusChars.contains(u'R')) {
+                status = u"script"_s;
+            }
+            
+            statuses[filePath] = status;
+            LOG_DEBUG(QStringLiteral("File status: %1 -> %2").arg(filePath, status));
+        }
     }
     
-    LOG_INFO(QStringLiteral("Found %1 managed files").arg(fileCount));
-    return files;
+    LOG_INFO(QStringLiteral("Found %1 files with status changes").arg(statuses.size()));
+    return statuses;
 }
 
 bool ChezmoiService::addFile(const QString &filePath)

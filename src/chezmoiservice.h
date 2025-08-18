@@ -5,6 +5,7 @@
 #include <QProcess>
 #include <QStringList>
 #include <QFileInfo>
+#include <QHash>
 #include <memory>
 
 class ChezmoiService : public QObject
@@ -26,6 +27,7 @@ public:
     bool isChezmoiInitialized() const;
     bool initializeRepository(const QString &repositoryUrl = QString());
     QList<FileStatus> getManagedFiles();
+    QHash<QString, QString> getFileStatuses();
     bool addFile(const QString &filePath);
     bool removeFile(const QString &filePath);
     bool applyChanges();

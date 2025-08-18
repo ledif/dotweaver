@@ -5,6 +5,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+#include <QColor>
 #include <memory>
 
 class ChezmoiService;
@@ -56,6 +57,8 @@ private:
     DotfileItem *getItem(const QModelIndex &index) const;
     void addFileToTree(const QString &relativePath, const QString &fullPath, const QString &status, bool isTemplate);
     DotfileItem *findOrCreateParent(const QString &path, DotfileItem *root);
+    QColor getItemColor(DotfileItem *item) const;
+    bool hasModifiedChildren(DotfileItem *item) const;
 
     ChezmoiService *m_chezmoiService;
     std::unique_ptr<DotfileItem> m_rootItem;
