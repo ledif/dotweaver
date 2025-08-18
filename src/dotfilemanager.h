@@ -59,6 +59,7 @@ private:
     DotfileItem *findOrCreateParent(const QString &path, DotfileItem *root);
     QColor getItemColor(DotfileItem *item) const;
     bool hasModifiedChildren(DotfileItem *item) const;
+    QIcon getFileIcon(const QString &filePath, bool isDirectory, bool isTemplate) const;
 
     ChezmoiService *m_chezmoiService;
     std::unique_ptr<DotfileItem> m_rootItem;

@@ -9,6 +9,8 @@
 #include <QDebug>
 #include <QStringList>
 #include <QColor>
+#include <QMimeDatabase>
+#include <QMimeType>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -196,13 +198,7 @@ QVariant DotfileManager::data(const QModelIndex &index, int role) const
         
     case Qt::DecorationRole:
         if (index.column() == 0) {
-            if (item->isDirectory) {
-                return QIcon::fromTheme(QStringLiteral("folder"));
-            } else if (item->isTemplate) {
-                return QIcon::fromTheme(QStringLiteral("text-x-generic-template"));
-            } else {
-                return QIcon::fromTheme(QStringLiteral("text-x-generic"));
-            }
+            return getFileIcon(item->fullPath, item->isDirectory, item->isTemplate);
         }
         break;
         
@@ -300,4 +296,95 @@ bool DotfileManager::hasModifiedChildren(DotfileItem *item) const
     }
     
     return false;
+}
+
+QIcon DotfileManager::getFileIcon(const QString &filePath, bool isDirectory, bool isTemplate) const
+{
+    // Handle directories first
+    if (isDirectory) {
+        return QIcon::fromTheme(QStringLiteral("folder"));
+    }
+    
+    // Handle template files with a special overlay or different icon
+    if (isTemplate) {
+        // For templates, we can either use a special template icon or the MIME type icon with template indicator
+        // Let's use the MIME type icon but could add template indication later
+    }
+    
+    // Use MIME database to get the appropriate icon
+    static QMimeDatabase mimeDb;
+    
+    // Get MIME type from file path
+    QMimeType mimeType = mimeDb.mimeTypeForFile(filePath);
+    QString iconName = mimeType.iconName();
+    
+    // Try to get the icon from theme
+    QIcon icon = QIcon::fromTheme(iconName);
+    
+    // If no icon found, try generic icon name
+    if (icon.isNull() && !mimeType.genericIconName().isEmpty()) {
+        icon = QIcon::fromTheme(mimeType.genericIconName());
+    }
+    
+    // If still no icon, try fallbacks based on MIME type category
+    if (icon.isNull()) {
+        QString mimeTypeName = mimeType.name();
+        if (mimeTypeName.startsWith(QStringLiteral("text/"))) {
+            icon = QIcon::fromTheme(QStringLiteral("text-x-generic"));
+        } else if (mimeTypeName.startsWith(QStringLiteral("image/"))) {
+            icon = QIcon::fromTheme(QStringLiteral("image-x-generic"));
+        } else if (mimeTypeName.startsWith(QStringLiteral("audio/"))) {
+            icon = QIcon::fromTheme(QStringLiteral("audio-x-generic"));
+        } else if (mimeTypeName.startsWith(QStringLiteral("video/"))) {
+            icon = QIcon::fromTheme(QStringLiteral("video-x-generic"));
+        }
+    }
+    
+    // Additional fallback to specific file type icons for common dotfiles
+    if (icon.isNull()) {
+        QString fileName = QFileInfo(filePath).fileName().toLower();
+        
+        // Common shell files
+        if (fileName.contains(QStringLiteral("bash")) || fileName.contains(QStringLiteral("zsh")) || 
+            fileName.contains(QStringLiteral("fish")) || fileName.endsWith(QStringLiteral(".sh"))) {
+            icon = QIcon::fromTheme(QStringLiteral("application-x-shellscript"));
+        }
+        // Git files
+        else if (fileName.contains(QStringLiteral("git"))) {
+            icon = QIcon::fromTheme(QStringLiteral("git"));
+        }
+        // Vim files
+        else if (fileName.contains(QStringLiteral("vim")) || fileName.endsWith(QStringLiteral(".vim"))) {
+            icon = QIcon::fromTheme(QStringLiteral("text-x-script"));
+        }
+        // SSH files
+        else if (fileName.contains(QStringLiteral("ssh"))) {
+            icon = QIcon::fromTheme(QStringLiteral("network-server"));
+        }
+        // Config files
+        else if (fileName.contains(QStringLiteral("config")) || fileName.contains(QStringLiteral("conf"))) {
+            icon = QIcon::fromTheme(QStringLiteral("preferences-other"));
+        }
+        // Environment files
+        else if (fileName.contains(QStringLiteral("env")) || fileName.contains(QStringLiteral("profile"))) {
+            icon = QIcon::fromTheme(QStringLiteral("preferences-desktop-environment"));
+        }
+    }
+    
+    // Final fallback - always return a text file icon if nothing else worked
+    if (icon.isNull()) {
+        icon = QIcon::fromTheme(QStringLiteral("text-x-generic"));
+        // If even that fails (shouldn't happen in most themes), try alternatives
+        if (icon.isNull()) {
+            icon = QIcon::fromTheme(QStringLiteral("text-plain"));
+        }
+        if (icon.isNull()) {
+            icon = QIcon::fromTheme(QStringLiteral("document-new"));
+        }
+    }
+    
+    // For template files, we could add a small overlay or badge here in the future
+    // For now, templates just use the same icon as the base file type
+    
+    return icon;
 }
