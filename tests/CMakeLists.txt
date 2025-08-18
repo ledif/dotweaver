@@ -6,11 +6,13 @@ enable_testing()
 add_executable(test_chezmoiservice
     test_chezmoiservice.cpp
     ../src/chezmoiservice.cpp
+    ../src/logger.cpp
 )
 
 target_link_libraries(test_chezmoiservice
     Qt6::Core
     Qt6::Test
+    Qt6::Widgets
 )
 
 target_include_directories(test_chezmoiservice PRIVATE
@@ -25,6 +27,7 @@ add_executable(test_dotfilemanager
     test_dotfilemanager.cpp
     ../src/dotfilemanager.cpp
     ../src/chezmoiservice.cpp
+    ../src/logger.cpp
 )
 
 target_link_libraries(test_dotfilemanager

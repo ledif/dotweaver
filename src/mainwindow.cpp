@@ -74,6 +74,7 @@ void MainWindow::setupUI()
     // Left panel - File tree
     m_fileTreeView = new QTreeView(this);
     m_fileTreeView->setMinimumWidth(250);
+    m_fileTreeView->setModel(m_dotfileManager.get());
     m_mainSplitter->addWidget(m_fileTreeView);
     
     // Right panel - Editor tabs and status
@@ -182,6 +183,11 @@ void MainWindow::onFileModified()
 
 void MainWindow::loadDotfiles()
 {
+    LOG_INFO("MainWindow: Loading dotfiles..."_L1);
+    
+    // Set up the connection between services
+    m_dotfileManager->setChezmoiService(m_chezmoiService.get());
+    
     // TODO: Load dotfiles from chezmoi and populate tree view
     m_statusList->addItem(i18n("Loading dotfiles..."));
 }

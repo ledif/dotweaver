@@ -1,5 +1,6 @@
 #include "dotfilemanager.h"
 #include "chezmoiservice.h"
+#include "logger.h"
 
 #include <memory>
 #include <QDir>
@@ -8,16 +9,13 @@
 #include <QDebug>
 #include <QStringList>
 
+using namespace Qt::Literals::StringLiterals;
+
 DotfileManager::DotfileManager(QObject *parent)
     : QAbstractItemModel(parent)
     , m_chezmoiService(nullptr)
-    , m_fileWatcher(std::make_unique<QFileSystemWatcher>(this))
     , m_rootItem(std::make_unique<DotfileItem>())
 {
-    connect(m_fileWatcher.get(), &QFileSystemWatcher::fileChanged,
-            this, &DotfileManager::onFileChanged);
-    connect(m_fileWatcher.get(), &QFileSystemWatcher::directoryChanged,
-            this, &DotfileManager::onDirectoryChanged);
 }
 
 DotfileManager::~DotfileManager() = default;
@@ -25,12 +23,16 @@ DotfileManager::~DotfileManager() = default;
 void DotfileManager::setChezmoiService(ChezmoiService *service)
 {
     m_chezmoiService = service;
+    LOG_INFO(QStringLiteral("DotfileManager: ChezmoiService set to %1").arg(service ? "valid pointer"_L1 : "nullptr"_L1));
     refreshFiles();
 }
 
 void DotfileManager::refreshFiles()
 {
+    LOG_INFO("DotfileManager: Refreshing files..."_L1);
+    
     if (!m_chezmoiService) {
+        LOG_WARNING("DotfileManager: No ChezmoiService available"_L1);
         return;
     }
     
@@ -38,14 +40,6 @@ void DotfileManager::refreshFiles()
     
     // Clear existing data
     m_rootItem = std::make_unique<DotfileItem>();
-    
-    // Clear file watcher
-    if (!m_fileWatcher->files().isEmpty()) {
-        m_fileWatcher->removePaths(m_fileWatcher->files());
-    }
-    if (!m_fileWatcher->directories().isEmpty()) {
-        m_fileWatcher->removePaths(m_fileWatcher->directories());
-    }
     
     buildFileTree();
     
@@ -56,39 +50,40 @@ void DotfileManager::refreshFiles()
 void DotfileManager::buildFileTree()
 {
     if (!m_chezmoiService) {
+        LOG_WARNING("DotfileManager: Cannot build file tree - no ChezmoiService"_L1);
         return;
     }
     
+    LOG_INFO("DotfileManager: Building file tree..."_L1);
     auto files = m_chezmoiService->getManagedFiles();
+    LOG_INFO(QStringLiteral("DotfileManager: Received %1 files from ChezmoiService").arg(files.size()));
     
     for (const auto &file : files) {
+        LOG_DEBUG(QStringLiteral("DotfileManager: Adding file to tree: %1").arg(file.path));
         addFileToTree(file.path, file.sourceFile.absoluteFilePath(), file.status, file.isTemplate);
-        
-        // Watch the source file for changes
-        if (file.sourceFile.exists()) {
-            m_fileWatcher->addPath(file.sourceFile.absoluteFilePath());
-        }
     }
     
-    // Also watch the chezmoi source directory
-    QString sourceDir = m_chezmoiService->getChezmoiDirectory();
-    if (QDir(sourceDir).exists()) {
-        m_fileWatcher->addPath(sourceDir);
-    }
+    LOG_INFO(QStringLiteral("DotfileManager: Tree building complete, root has %1 children").arg(m_rootItem->children.size()));
 }
 
 void DotfileManager::addFileToTree(const QString &relativePath, const QString &fullPath, const QString &status, bool isTemplate)
 {
+    LOG_DEBUG(QStringLiteral("DotfileManager: addFileToTree called with path: %1").arg(relativePath));
+    
     QStringList pathParts = relativePath.split(QLatin1Char('/'), Qt::SkipEmptyParts);
     if (pathParts.isEmpty()) {
+        LOG_WARNING(QStringLiteral("DotfileManager: Empty path parts for: %1").arg(relativePath));
         return;
     }
+    
+    LOG_DEBUG(QStringLiteral("DotfileManager: Path parts: %1").arg(pathParts.join(", "_L1)));
     
     DotfileItem *currentParent = m_rootItem.get();
     
     // Navigate/create the directory structure
     for (int i = 0; i < pathParts.size() - 1; ++i) {
         currentParent = findOrCreateParent(pathParts[i], currentParent);
+        LOG_DEBUG(QStringLiteral("DotfileManager: Created/found parent: %1").arg(pathParts[i]));
     }
     
     // Add the file
@@ -99,6 +94,7 @@ void DotfileManager::addFileToTree(const QString &relativePath, const QString &f
     fileItem->isDirectory = QFileInfo(fullPath).isDir();
     
     currentParent->children.append(fileItem);
+    LOG_DEBUG(QStringLiteral("DotfileManager: Added file item: %1 (parent has %2 children)").arg(pathParts.last()).arg(currentParent->children.size()));
 }
 
 DotfileManager::DotfileItem *DotfileManager::findOrCreateParent(const QString &name, DotfileItem *parent)
@@ -161,7 +157,14 @@ QModelIndex DotfileManager::parent(const QModelIndex &child) const
 int DotfileManager::rowCount(const QModelIndex &parent) const
 {
     DotfileItem *parentItem = getItem(parent);
-    return parentItem ? parentItem->children.size() : 0;
+    int count = parentItem ? parentItem->children.size() : 0;
+    
+    if (!parent.isValid()) {
+        // This is the root
+        LOG_DEBUG(QStringLiteral("DotfileManager: rowCount for root: %1").arg(count));
+    }
+    
+    return count;
 }
 
 int DotfileManager::columnCount(const QModelIndex &parent) const
@@ -245,16 +248,4 @@ DotfileManager::DotfileItem *DotfileManager::getItem(const QModelIndex &index) c
         }
     }
     return m_rootItem.get();
-}
-
-void DotfileManager::onFileChanged(const QString &path)
-{
-    Q_EMIT fileModified(path);
-}
-
-void DotfileManager::onDirectoryChanged(const QString &path)
-{
-    Q_UNUSED(path)
-    // Refresh the entire tree when the source directory changes
-    refreshFiles();
 }

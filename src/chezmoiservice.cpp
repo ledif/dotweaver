@@ -1,4 +1,5 @@
 #include "chezmoiservice.h"
+#include "logger.h"
 
 #include <memory>
 #include <QStandardPaths>
@@ -6,6 +7,8 @@
 #include <QDebug>
 #include <QTextStream>
 #include <QRegularExpression>
+
+using namespace Qt::Literals::StringLiterals;
 
 ChezmoiService::ChezmoiService(QObject *parent)
     : QObject(parent)
@@ -19,19 +22,32 @@ ChezmoiService::ChezmoiService(QObject *parent)
             this, &ChezmoiService::onProcessError);
     
     m_chezmoiPath = getChezmoiExecutable();
+    
+    LOG_INFO(QStringLiteral("ChezmoiService initialized with path: %1").arg(m_chezmoiPath.isEmpty() ? "NOT FOUND"_L1 : m_chezmoiPath));
 }
 
 ChezmoiService::~ChezmoiService() = default;
 
 QString ChezmoiService::getChezmoiExecutable() const
 {
-    return QStandardPaths::findExecutable(QStringLiteral("chezmoi"));
+    QString path = QStandardPaths::findExecutable(QStringLiteral("chezmoi"));
+    LOG_INFO(QStringLiteral("Looking for chezmoi executable: %1").arg(path.isEmpty() ? "NOT FOUND"_L1 : path));
+    return path;
 }
 
 bool ChezmoiService::isChezmoiInitialized() const
 {
     QString chezmoiDir = getChezmoiDirectory();
-    return QDir(chezmoiDir).exists() && QDir(chezmoiDir + QStringLiteral("/.git")).exists();
+    bool dirExists = QDir(chezmoiDir).exists();
+    bool gitExists = QDir(chezmoiDir + QStringLiteral("/.git")).exists();
+    bool initialized = dirExists && gitExists;
+    
+    LOG_INFO(QStringLiteral("Checking chezmoi initialization:"));
+    LOG_INFO(QStringLiteral("  Directory: %1 (exists: %2)").arg(chezmoiDir).arg(dirExists ? "yes"_L1 : "no"_L1));
+    LOG_INFO(QStringLiteral("  Git repo: %1/.git (exists: %2)").arg(chezmoiDir).arg(gitExists ? "yes"_L1 : "no"_L1));
+    LOG_INFO(QStringLiteral("  Initialized: %1").arg(initialized ? "yes"_L1 : "no"_L1));
+    
+    return initialized;
 }
 
 bool ChezmoiService::initializeRepository(const QString &repositoryUrl)
@@ -56,18 +72,36 @@ QList<ChezmoiService::FileStatus> ChezmoiService::getManagedFiles()
 {
     QList<FileStatus> files;
     
-    if (!runChezmoiCommand({QStringLiteral("managed"), QStringLiteral("-i")}, false)) {
+    LOG_INFO("Getting managed files from chezmoi"_L1);
+    
+    if (m_chezmoiPath.isEmpty()) {
+        LOG_ERROR("Cannot get managed files: chezmoi executable not found"_L1);
+        return files;
+    }
+    
+    if (!runChezmoiCommand({QStringLiteral("managed")}, false)) {
+        LOG_ERROR("Failed to run 'chezmoi managed' command"_L1);
         return files;
     }
     
     QString output = QString::fromUtf8(m_process->readAllStandardOutput());
+    LOG_INFO(QStringLiteral("Chezmoi managed command output (%1 chars):").arg(output.length()));
+    LOG_INFO(output.isEmpty() ? "  (empty output)"_L1 : QStringLiteral("  %1").arg(output.left(200) + (output.length() > 200 ? "..."_L1 : ""_L1)));
+    
     QTextStream stream(&output);
     QString line;
+    int fileCount = 0;
+    
+    // Cache the source directory to avoid multiple calls
+    QString sourceDir = getChezmoiDirectory();
     
     while (stream.readLineInto(&line)) {
         if (line.trimmed().isEmpty()) {
             continue;
         }
+        
+        fileCount++;
+        LOG_DEBUG(QStringLiteral("Processing managed file: %1").arg(line.trimmed()));
         
         FileStatus status;
         status.path = line.trimmed();
@@ -75,7 +109,6 @@ QList<ChezmoiService::FileStatus> ChezmoiService::getManagedFiles()
         status.isTemplate = line.contains(QStringLiteral(".tmpl"));
         
         // Get source file info
-        QString sourceDir = getChezmoiDirectory();
         QString sourcePath = sourceDir + QStringLiteral("/") + status.path;
         status.sourceFile = QFileInfo(sourcePath);
         
@@ -86,6 +119,7 @@ QList<ChezmoiService::FileStatus> ChezmoiService::getManagedFiles()
         files.append(status);
     }
     
+    LOG_INFO(QStringLiteral("Found %1 managed files").arg(fileCount));
     return files;
 }
 
@@ -131,16 +165,28 @@ bool ChezmoiService::updateRepository()
 
 QString ChezmoiService::getChezmoiDirectory() const
 {
+    if (m_chezmoiPath.isEmpty()) {
+        QString fallback = QDir::homePath() + QStringLiteral("/.local/share/chezmoi");
+        LOG_WARNING(QStringLiteral("Chezmoi executable not found, using fallback directory: %1").arg(fallback));
+        return fallback;
+    }
+    
     QProcess process;
+    LOG_DEBUG("Running 'chezmoi source-path' to get source directory"_L1);
     process.start(m_chezmoiPath, {QStringLiteral("source-path")});
     process.waitForFinished();
     
     if (process.exitCode() == 0) {
-        return QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+        QString result = QString::fromUtf8(process.readAllStandardOutput()).trimmed();
+        LOG_INFO(QStringLiteral("Chezmoi source directory: %1").arg(result));
+        return result;
+    } else {
+        QString error = QString::fromUtf8(process.readAllStandardError());
+        QString fallback = QDir::homePath() + QStringLiteral("/.local/share/chezmoi");
+        LOG_WARNING(QStringLiteral("Failed to get chezmoi source directory (exit code: %1, error: %2), using fallback: %3")
+                   .arg(process.exitCode()).arg(error).arg(fallback));
+        return fallback;
     }
-    
-    // Fallback to default location
-    return QDir::homePath() + QStringLiteral("/.local/share/chezmoi");
 }
 
 QString ChezmoiService::getConfigFile() const
@@ -160,20 +206,44 @@ QString ChezmoiService::getConfigFile() const
 bool ChezmoiService::runChezmoiCommand(const QStringList &arguments, bool async)
 {
     if (m_chezmoiPath.isEmpty()) {
+        LOG_ERROR("Cannot run chezmoi command: executable not found"_L1);
         return false;
     }
     
+    QString cmdLine = QStringLiteral("%1 %2").arg(m_chezmoiPath, arguments.join(QChar(u' ')));
+    LOG_DEBUG(QStringLiteral("Running chezmoi command: %1 (async: %2)").arg(cmdLine).arg(async ? "yes"_L1 : "no"_L1));
+    
     if (async) {
         m_process->start(m_chezmoiPath, arguments);
-        return m_process->waitForStarted();
+        bool started = m_process->waitForStarted();
+        LOG_DEBUG(QStringLiteral("Command started: %1").arg(started ? "yes"_L1 : "no"_L1));
+        return started;
     } else {
         m_process->start(m_chezmoiPath, arguments);
-        return m_process->waitForFinished() && m_process->exitCode() == 0;
+        bool finished = m_process->waitForFinished();
+        int exitCode = m_process->exitCode();
+        bool success = finished && exitCode == 0;
+        
+        if (!finished) {
+            LOG_ERROR("Command did not finish properly"_L1);
+        } else if (exitCode != 0) {
+            QString errorOutput = QString::fromUtf8(m_process->readAllStandardError());
+            LOG_ERROR(QStringLiteral("Command failed with exit code %1, error: %2").arg(exitCode).arg(errorOutput));
+        } else {
+            LOG_DEBUG("Command completed successfully"_L1);
+        }
+        
+        return success;
     }
 }
 
 void ChezmoiService::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
+    // Only emit operationCompleted for async operations (when m_currentOperation is set)
+    if (m_currentOperation.isEmpty()) {
+        return;
+    }
+    
     bool success = (exitCode == 0 && exitStatus == QProcess::NormalExit);
     QString message;
     

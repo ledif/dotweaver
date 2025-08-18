@@ -2,7 +2,6 @@
 #define DOTFILEMANAGER_H
 
 #include <QObject>
-#include <QFileSystemWatcher>
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
@@ -52,10 +51,6 @@ Q_SIGNALS:
     void fileModified(const QString &filePath);
     void filesRefreshed();
 
-private Q_SLOTS:
-    void onFileChanged(const QString &path);
-    void onDirectoryChanged(const QString &path);
-
 private:
     void buildFileTree();
     DotfileItem *getItem(const QModelIndex &index) const;
@@ -63,8 +58,8 @@ private:
     DotfileItem *findOrCreateParent(const QString &path, DotfileItem *root);
 
     ChezmoiService *m_chezmoiService;
-    std::unique_ptr<QFileSystemWatcher> m_fileWatcher;
     std::unique_ptr<DotfileItem> m_rootItem;
 };
+
 
 #endif // DOTFILEMANAGER_H
