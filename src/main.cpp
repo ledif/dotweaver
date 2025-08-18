@@ -5,7 +5,10 @@
 #include <QDebug>
 
 #include "mainwindow.h"
+#include "logger.h"
 #include "dotweaver_version.h"
+
+using namespace Qt::Literals::StringLiterals;
 
 int main(int argc, char *argv[])
 {
@@ -38,6 +41,10 @@ int main(int argc, char *argv[])
     
     KAboutData::setApplicationData(aboutData);
     
+    // Initialize logging
+    Logger::instance()->setupLogging();
+    //LOG_INFO("DotWeaver application starting"_L1);
+
     QCommandLineParser parser;
     aboutData.setupCommandLine(&parser);
     parser.process(app);

@@ -8,6 +8,10 @@ add_executable(dotweaver
     dotfilemanager.h
     configeditor.cpp
     configeditor.h
+    logger.cpp
+    logger.h
+    logviewer.cpp
+    logviewer.h
     ../resources.qrc
 )
 

@@ -2,6 +2,8 @@
 #include "chezmoiservice.h"
 #include "dotfilemanager.h"
 #include "configeditor.h"
+#include "logger.h"
+#include "logviewer.h"
 
 #include <QApplication>
 #include <QSplitter>
@@ -12,13 +14,11 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QWidget>
-#include <QStatusBar>
 
 #include <KAboutApplicationDialog>
 #include <KAboutData>
-#include <QProgressBar>
-#include <QLabel>
-#include <QMenuBar>
+
+using namespace Qt::Literals::StringLiterals;
 #include <QToolBar>
 #include <QFileSystemModel>
 
@@ -42,15 +42,12 @@ MainWindow::MainWindow(QWidget *parent)
     , m_configEditor(new ConfigEditor(this))
     , m_currentFile()
 {
-    // Set application icon
     QIcon appIcon = QIcon::fromTheme(QStringLiteral("dotweaver"), QIcon(QStringLiteral(":/icons/dotweaver.png")));
     setWindowIcon(appIcon);
     
     setupUI();
     setupActions();
-    setupStatusBar();
     
-    // Connect signals
     connect(m_chezmoiService, &ChezmoiService::operationCompleted,
             this, &MainWindow::refreshFiles);
     connect(m_dotfileManager, &DotfileManager::fileModified,
@@ -117,20 +114,17 @@ void MainWindow::setupActions()
     // Settings menu
     KStandardAction::preferences(this, &MainWindow::openSettings, actionCollection());
     
+    // Tools menu
+    auto *showLogAction = actionCollection()->addAction(QStringLiteral("show_log"));
+    showLogAction->setText(i18n("View &Log..."));
+    showLogAction->setIcon(QIcon::fromTheme(QStringLiteral("utilities-log-viewer")));
+    showLogAction->setToolTip(i18n("View application log messages"));
+    connect(showLogAction, &QAction::triggered, this, &MainWindow::showLogViewer);
+    
     // Help menu
     KStandardAction::aboutApp(this, &MainWindow::showAbout, actionCollection());
     
-    createGUI();
-}
-
-void MainWindow::setupStatusBar()
-{
-    auto *statusLabel = new QLabel(i18n("Ready"), this);
-    statusBar()->addWidget(statusLabel);
-    
-    auto *progressBar = new QProgressBar(this);
-    progressBar->setVisible(false);
-    statusBar()->addPermanentWidget(progressBar);
+    setupGUI(Default, "dotweaver.xml"_L1);
 }
 
 void MainWindow::openSettings()
@@ -147,12 +141,11 @@ void MainWindow::openSettings()
 void MainWindow::refreshFiles()
 {
     loadDotfiles();
-    statusBar()->showMessage(i18n("Files refreshed"), 2000);
 }
 
 void MainWindow::syncFiles()
 {
-    statusBar()->showMessage(i18n("Syncing files..."));
+    LOG_INFO("Starting file sync"_L1);
     m_chezmoiService->applyChanges();
 }
 
@@ -160,6 +153,17 @@ void MainWindow::showAbout()
 {
     KAboutApplicationDialog dialog(KAboutData::applicationData(), this);
     dialog.exec();
+}
+
+void MainWindow::showLogViewer()
+{
+    auto *logViewer = new LogViewer(this);
+    logViewer->setAttribute(Qt::WA_DeleteOnClose);
+    logViewer->show();
+    logViewer->raise();
+    logViewer->activateWindow();
+    
+    LOG_INFO("Log viewer opened"_L1);
 }
 
 void MainWindow::onFileSelected(const QString &filePath)
@@ -171,7 +175,7 @@ void MainWindow::onFileSelected(const QString &filePath)
 void MainWindow::onFileModified()
 {
     // TODO: Handle file modification
-    statusBar()->showMessage(i18n("File modified"), 2000);
+    LOG_INFO("File modified"_L1);
 }
 
 void MainWindow::loadDotfiles()

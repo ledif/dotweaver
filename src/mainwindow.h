@@ -26,13 +26,13 @@ private Q_SLOTS:
     void refreshFiles();
     void syncFiles();
     void showAbout();
+    void showLogViewer();
     void onFileSelected(const QString &filePath);
     void onFileModified();
 
 private:
     void setupUI();
     void setupActions();
-    void setupStatusBar();
     void loadDotfiles();
 
     QSplitter *m_mainSplitter;

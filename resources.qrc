@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>icons/dotweaver.png</file>
         <file alias="icons/dotweaver.svg">icons/kchezmoi.svg</file>
+        <file>src/ui/dotweaver.xml</file>
     </qresource>
 </RCC>
