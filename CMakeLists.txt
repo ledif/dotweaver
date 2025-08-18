@@ -30,8 +30,8 @@ find_package(Qt6 6.4.0 REQUIRED COMPONENTS
 find_package(KF6 REQUIRED COMPONENTS
     CoreAddons
     I18n
-    Config
-    ConfigWidgets
+ #   Config
+ #   ConfigWidgets
     XmlGui
     KIO
     IconThemes

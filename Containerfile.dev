@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:39
+FROM registry.fedoraproject.org/fedora:42
 
 # Install development dependencies
 RUN dnf update -y && \
@@ -7,9 +7,9 @@ RUN dnf update -y && \
         make \
         gcc-c++ \
         qt6-qtbase-devel \
-        qt6-qtwidgets-devel \
         qt6-qtdeclarative-devel \
         kf6-kcoreaddons-devel \
+        kf6-kconfig-devel \
         kf6-ki18n-devel \
         kf6-kconfig-devel \
         kf6-kconfigwidgets-devel \

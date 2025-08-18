@@ -12,8 +12,8 @@ target_link_libraries(kchezmoi
     Qt6::DBus
     KF6::CoreAddons
     KF6::I18n
-    KF6::Config
-    KF6::ConfigWidgets
+    #KF6::Config
+    #KF6::ConfigWidgets
     KF6::XmlGui
     KF6::KIOCore
     KF6::KIOWidgets
