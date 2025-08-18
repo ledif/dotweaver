@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
         QStringLiteral("dotweaver"),
         i18n("DotWeaver"),
         QStringLiteral(DOTWEAVER_VERSION_STRING),
-        i18n("A modern dotfile management application powered by chezmoi"),
+        i18n("Dotfile management powered by chezmoi"),
         KAboutLicense::MIT,
         i18n("(c) 2025 Adam Fidel")
     );

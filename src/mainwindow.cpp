@@ -34,7 +34,6 @@ using namespace Qt::Literals::StringLiterals;
 
 MainWindow::MainWindow(QWidget *parent)
     : KXmlGuiWindow(parent)
-    , m_mainSplitter(nullptr)
     , m_fileTreeView(nullptr)
     , m_editorTabs(nullptr)
     , m_statusList(nullptr)
@@ -64,22 +63,47 @@ void MainWindow::setupUI()
     auto *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
     
-    // Create main layout
-    auto *mainLayout = new QVBoxLayout(centralWidget);
+    // Create main horizontal layout (no margins for flush sidebar)
+    auto *mainLayout = new QHBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
     
-    // Create splitter
-    m_mainSplitter = new QSplitter(Qt::Horizontal, this);
-    mainLayout->addWidget(m_mainSplitter);
-    
-    // Left panel - File tree
+    // Left sidebar - File tree
     m_fileTreeView = new QTreeView(this);
-    m_fileTreeView->setMinimumWidth(250);
+    m_fileTreeView->setMinimumWidth(200);
+    m_fileTreeView->setMaximumWidth(400);
+    m_fileTreeView->resize(250, m_fileTreeView->height());
     m_fileTreeView->setModel(m_dotfileManager.get());
-    m_mainSplitter->addWidget(m_fileTreeView);
+    
+    /* Style the sidebar to look integrated
+    m_fileTreeView->setStyleSheet(
+        "QTreeView {"
+        "    border: none;"
+        "    border-right: 1px solid palette(mid);"
+        "    background-color: palette(alternate-base);"
+        "    selection-background-color: palette(highlight);"
+        "}"
+        "QTreeView::item {"
+        "    padding: 4px 8px;"
+        "    border: none;"
+        "}"
+        "QTreeView::item:hover {"
+        "    background-color: palette(midlight);"
+        "}"
+        "QTreeView::item:selected {"
+        "    background-color: palette(highlight);"
+        "}"_L1
+    );*/
+    
+    m_fileTreeView->setHeaderHidden(true);
+    m_fileTreeView->setIndentation(15);
+    m_fileTreeView->setRootIsDecorated(true);
+    mainLayout->addWidget(m_fileTreeView);
     
     // Right panel - Editor tabs and status
     auto *rightWidget = new QWidget(this);
     auto *rightLayout = new QVBoxLayout(rightWidget);
+    rightLayout->setContentsMargins(0, 0, 0, 0);
     
     m_editorTabs = new QTabWidget(this);
     m_editorTabs->setTabsClosable(true);
@@ -89,8 +113,7 @@ void MainWindow::setupUI()
     m_statusList->setMaximumHeight(150);
     rightLayout->addWidget(m_statusList, 1);
     
-    m_mainSplitter->addWidget(rightWidget);
-    m_mainSplitter->setSizes({250, 600});
+    mainLayout->addWidget(rightWidget, 1); // Give the right panel stretch priority
     
     setWindowTitle(i18n("Home"));
     resize(1000, 700);
@@ -112,6 +135,15 @@ void MainWindow::setupActions()
     syncAction->setIcon(QIcon::fromTheme(QStringLiteral("folder-sync")));
     KActionCollection::setDefaultShortcut(syncAction, QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(syncAction, &QAction::triggered, this, &MainWindow::syncFiles);
+    
+    // View menu
+    auto *toggleSidebarAction = actionCollection()->addAction(QStringLiteral("toggle_sidebar"));
+    toggleSidebarAction->setText(i18n("Toggle &Sidebar"));
+    toggleSidebarAction->setIcon(QIcon::fromTheme(QStringLiteral("view-sidetree")));
+    toggleSidebarAction->setCheckable(true);
+    toggleSidebarAction->setChecked(true);
+    KActionCollection::setDefaultShortcut(toggleSidebarAction, QKeySequence(Qt::CTRL | Qt::Key_B));
+    connect(toggleSidebarAction, &QAction::triggered, this, &MainWindow::toggleSidebar);
     
     // Settings menu
     KStandardAction::preferences(this, &MainWindow::openSettings, actionCollection());
@@ -150,6 +182,20 @@ void MainWindow::syncFiles()
 {
     LOG_INFO("Starting file sync"_L1);
     m_chezmoiService->applyChanges();
+}
+
+void MainWindow::toggleSidebar()
+{
+    if (m_fileTreeView) {
+        bool isVisible = m_fileTreeView->isVisible();
+        m_fileTreeView->setVisible(!isVisible);
+        
+        // Update the action state
+        auto *action = actionCollection()->action(QStringLiteral("toggle_sidebar"));
+        if (action) {
+            action->setChecked(!isVisible);
+        }
+    }
 }
 
 void MainWindow::showAbout()

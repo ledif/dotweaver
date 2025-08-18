@@ -22,6 +22,11 @@
         <Action name="edit_file"/>
     </Menu>
     
+    <Menu name="view">
+        <text>&amp;View</text>
+        <Action name="toggle_sidebar"/>
+    </Menu>
+    
     <Menu name="tools">
         <text>&amp;Tools</text>
         <Action name="sync"/>

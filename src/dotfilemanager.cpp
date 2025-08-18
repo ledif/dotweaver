@@ -170,7 +170,7 @@ int DotfileManager::rowCount(const QModelIndex &parent) const
 int DotfileManager::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
-    return 3; // Name, Status, Type
+    return 1; // Just the name/file tree
 }
 
 QVariant DotfileManager::data(const QModelIndex &index, int role) const
@@ -219,12 +219,11 @@ QVariant DotfileManager::headerData(int section, Qt::Orientation orientation, in
         return QVariant();
     }
     
-    switch (section) {
-    case 0: return QStringLiteral("Name");
-    case 1: return QStringLiteral("Status");
-    case 2: return QStringLiteral("Type");
-    default: return QVariant();
+    if (section == 0) {
+        return QStringLiteral("Files");
     }
+    
+    return QVariant();
 }
 
 QString DotfileManager::getFilePath(const QModelIndex &index) const

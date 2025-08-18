@@ -5,7 +5,6 @@
 #include <QStackedWidget>
 #include <memory>
 
-class QSplitter;
 class QTreeView;
 class QTextEdit;
 class QListWidget;
@@ -28,6 +27,7 @@ private Q_SLOTS:
     void syncFiles();
     void showAbout();
     void showLogViewer();
+    void toggleSidebar();
     void onFileSelected(const QString &filePath);
     void onFileModified();
 
@@ -36,7 +36,6 @@ private:
     void setupActions();
     void loadDotfiles();
 
-    QSplitter *m_mainSplitter;
     QTreeView *m_fileTreeView;
     QTabWidget *m_editorTabs;
     QListWidget *m_statusList;
