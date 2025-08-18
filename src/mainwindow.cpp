@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "logviewer.h"
 
+#include <memory>
 #include <QApplication>
 #include <QSplitter>
 #include <QTreeView>
@@ -37,9 +38,9 @@ MainWindow::MainWindow(QWidget *parent)
     , m_fileTreeView(nullptr)
     , m_editorTabs(nullptr)
     , m_statusList(nullptr)
-    , m_chezmoiService(new ChezmoiService(this))
-    , m_dotfileManager(new DotfileManager(this))
-    , m_configEditor(new ConfigEditor(this))
+    , m_chezmoiService(std::make_unique<ChezmoiService>(this))
+    , m_dotfileManager(std::make_unique<DotfileManager>(this))
+    , m_configEditor(std::make_unique<ConfigEditor>(this))
     , m_currentFile()
 {
     QIcon appIcon = QIcon::fromTheme(QStringLiteral("dotweaver"), QIcon(QStringLiteral(":/icons/dotweaver.png")));
@@ -48,9 +49,9 @@ MainWindow::MainWindow(QWidget *parent)
     setupUI();
     setupActions();
     
-    connect(m_chezmoiService, &ChezmoiService::operationCompleted,
+    connect(m_chezmoiService.get(), &ChezmoiService::operationCompleted,
             this, &MainWindow::refreshFiles);
-    connect(m_dotfileManager, &DotfileManager::fileModified,
+    connect(m_dotfileManager.get(), &DotfileManager::fileModified,
             this, &MainWindow::onFileModified);
     
     loadDotfiles();
@@ -135,7 +136,7 @@ void MainWindow::openSettings()
     }
     
     auto *dialog = new KConfigDialog(this, QStringLiteral("settings"), nullptr);
-    dialog->addPage(m_configEditor, i18n("General"), QStringLiteral("configure"));
+    dialog->addPage(m_configEditor.get(), i18n("General"), QStringLiteral("configure"));
     dialog->show();
 }
 

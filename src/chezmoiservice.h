@@ -5,6 +5,7 @@
 #include <QProcess>
 #include <QStringList>
 #include <QFileInfo>
+#include <memory>
 
 class ChezmoiService : public QObject
 {
@@ -46,7 +47,7 @@ private:
     QString getChezmoiExecutable() const;
     void parseStatusOutput(const QString &output);
 
-    QProcess *m_process;
+    std::unique_ptr<QProcess> m_process;
     QString m_chezmoiPath;
     QString m_currentOperation;
 };

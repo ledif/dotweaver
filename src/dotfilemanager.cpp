@@ -1,6 +1,7 @@
 #include "dotfilemanager.h"
 #include "chezmoiservice.h"
 
+#include <memory>
 #include <QDir>
 #include <QFileInfo>
 #include <QIcon>
@@ -10,19 +11,16 @@
 DotfileManager::DotfileManager(QObject *parent)
     : QAbstractItemModel(parent)
     , m_chezmoiService(nullptr)
-    , m_fileWatcher(new QFileSystemWatcher(this))
-    , m_rootItem(new DotfileItem())
+    , m_fileWatcher(std::make_unique<QFileSystemWatcher>(this))
+    , m_rootItem(std::make_unique<DotfileItem>())
 {
-    connect(m_fileWatcher, &QFileSystemWatcher::fileChanged,
+    connect(m_fileWatcher.get(), &QFileSystemWatcher::fileChanged,
             this, &DotfileManager::onFileChanged);
-    connect(m_fileWatcher, &QFileSystemWatcher::directoryChanged,
+    connect(m_fileWatcher.get(), &QFileSystemWatcher::directoryChanged,
             this, &DotfileManager::onDirectoryChanged);
 }
 
-DotfileManager::~DotfileManager()
-{
-    delete m_rootItem;
-}
+DotfileManager::~DotfileManager() = default;
 
 void DotfileManager::setChezmoiService(ChezmoiService *service)
 {
@@ -39,8 +37,7 @@ void DotfileManager::refreshFiles()
     beginResetModel();
     
     // Clear existing data
-    delete m_rootItem;
-    m_rootItem = new DotfileItem();
+    m_rootItem = std::make_unique<DotfileItem>();
     
     // Clear file watcher
     if (!m_fileWatcher->files().isEmpty()) {
@@ -87,7 +84,7 @@ void DotfileManager::addFileToTree(const QString &relativePath, const QString &f
         return;
     }
     
-    DotfileItem *currentParent = m_rootItem;
+    DotfileItem *currentParent = m_rootItem.get();
     
     // Navigate/create the directory structure
     for (int i = 0; i < pathParts.size() - 1; ++i) {
@@ -148,7 +145,7 @@ QModelIndex DotfileManager::parent(const QModelIndex &child) const
     }
     
     DotfileItem *parentItem = childItem->parent;
-    if (parentItem == m_rootItem || !parentItem) {
+    if (parentItem == m_rootItem.get() || !parentItem) {
         return QModelIndex();
     }
     
@@ -247,7 +244,7 @@ DotfileManager::DotfileItem *DotfileManager::getItem(const QModelIndex &index) c
             return item;
         }
     }
-    return m_rootItem;
+    return m_rootItem.get();
 }
 
 void DotfileManager::onFileChanged(const QString &path)

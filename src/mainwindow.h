@@ -3,6 +3,7 @@
 
 #include <KXmlGuiWindow>
 #include <QStackedWidget>
+#include <memory>
 
 class QSplitter;
 class QTreeView;
@@ -40,9 +41,9 @@ private:
     QTabWidget *m_editorTabs;
     QListWidget *m_statusList;
     
-    ChezmoiService *m_chezmoiService;
-    DotfileManager *m_dotfileManager;
-    ConfigEditor *m_configEditor;
+    std::unique_ptr<ChezmoiService> m_chezmoiService;
+    std::unique_ptr<DotfileManager> m_dotfileManager;
+    std::unique_ptr<ConfigEditor> m_configEditor;
     
     QString m_currentFile;
 };

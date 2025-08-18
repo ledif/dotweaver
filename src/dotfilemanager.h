@@ -6,6 +6,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+#include <memory>
 
 class ChezmoiService;
 
@@ -62,8 +63,8 @@ private:
     DotfileItem *findOrCreateParent(const QString &path, DotfileItem *root);
 
     ChezmoiService *m_chezmoiService;
-    QFileSystemWatcher *m_fileWatcher;
-    DotfileItem *m_rootItem;
+    std::unique_ptr<QFileSystemWatcher> m_fileWatcher;
+    std::unique_ptr<DotfileItem> m_rootItem;
 };
 
 #endif // DOTFILEMANAGER_H

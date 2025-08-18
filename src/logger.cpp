@@ -1,4 +1,5 @@
 #include "logger.h"
+#include <memory>
 #include <QApplication>
 #include <QDebug>
 
@@ -25,11 +26,11 @@ Logger::Logger(QObject *parent)
 Logger::~Logger()
 {
     if (m_stream) {
-        delete m_stream;
+        m_stream.reset();
     }
     if (m_logFile && m_logFile->isOpen()) {
         m_logFile->close();
-        delete m_logFile;
+        m_logFile.reset();
     }
 }
 
@@ -53,9 +54,9 @@ void Logger::setupLogging()
     m_logFilePath = logDir + "/dotweaver.log"_L1;
     
     // Open log file
-    m_logFile = new QFile(m_logFilePath);
+    m_logFile = std::make_unique<QFile>(m_logFilePath);
     if (m_logFile->open(QIODevice::WriteOnly | QIODevice::Append)) {
-        m_stream = new QTextStream(m_logFile);
+        m_stream = std::make_unique<QTextStream>(m_logFile.get());
         m_stream->setEncoding(QStringConverter::Utf8);
         
         // Log startup
@@ -148,7 +149,6 @@ void Logger::clearLog()
     }
 }
 
-// Static convenience methods
 void Logger::debug(const QString &message, const QString &category)
 {
     instance()->log(Debug, message, category);

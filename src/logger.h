@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <QStandardPaths>
 #include <QDir>
+#include <memory>
 
 class Logger : public QObject
 {
@@ -45,8 +46,8 @@ private:
     QString levelToString(LogLevel level);
     
     static Logger *m_instance;
-    QFile *m_logFile;
-    QTextStream *m_stream;
+    std::unique_ptr<QFile> m_logFile;
+    std::unique_ptr<QTextStream> m_stream;
     QMutex m_mutex;
     QString m_logFilePath;
 };

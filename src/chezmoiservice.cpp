@@ -1,5 +1,6 @@
 #include "chezmoiservice.h"
 
+#include <memory>
 #include <QStandardPaths>
 #include <QDir>
 #include <QDebug>
@@ -8,13 +9,13 @@
 
 ChezmoiService::ChezmoiService(QObject *parent)
     : QObject(parent)
-    , m_process(new QProcess(this))
+    , m_process(std::make_unique<QProcess>(this))
     , m_chezmoiPath()
     , m_currentOperation()
 {
-    connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+    connect(m_process.get(), QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &ChezmoiService::onProcessFinished);
-    connect(m_process, &QProcess::errorOccurred,
+    connect(m_process.get(), &QProcess::errorOccurred,
             this, &ChezmoiService::onProcessError);
     
     m_chezmoiPath = getChezmoiExecutable();
