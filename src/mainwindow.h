@@ -5,10 +5,11 @@
 #include <QStackedWidget>
 #include <memory>
 
+#include "statusbar.h"
+
 class QTreeView;
 class QTextEdit;
 class QTabWidget;
-class QLabel;
 class ChezmoiService;
 class DotfileManager;
 class ConfigEditor;
@@ -35,20 +36,15 @@ private:
     void setupUI();
     void setupActions();
     void setupStatusBar();
-    void updateGitStatus();
     void loadDotfiles();
 
     QTreeView *m_fileTreeView;
     QTabWidget *m_editorTabs;
     
-    // Status bar widgets
-    QLabel *m_statusLeft;
-    QLabel *m_statusCenter;
-    QLabel *m_statusRight;
-    
     std::unique_ptr<ChezmoiService> m_chezmoiService;
     std::unique_ptr<DotfileManager> m_dotfileManager;
     std::unique_ptr<ConfigEditor> m_configEditor;
+    ::StatusBar *m_statusBar;
     
     QString m_currentFile;
 };

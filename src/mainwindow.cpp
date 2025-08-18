@@ -4,8 +4,17 @@
 #include "configeditor.h"
 #include "logger.h"
 #include "logviewer.h"
+#include "statusbar.h"
 
-#include <memory>
+
+#include <KAboutApplicationDialog>
+#include <KAboutData>
+#include <KActionCollection>
+#include <KStandardAction>
+#include <KConfigDialog>
+#include <KMessageBox>
+#include <KLocalizedString>
+#include <KNotification>
 #include <QApplication>
 #include <QSplitter>
 #include <QTreeView>
@@ -18,33 +27,24 @@
 #include <QLabel>
 #include <QProcess>
 #include <QStatusBar>
-
-#include <KAboutApplicationDialog>
-#include <KAboutData>
-
-using namespace Qt::Literals::StringLiterals;
 #include <QToolBar>
 #include <QFileSystemModel>
-
-#include <KActionCollection>
-#include <KStandardAction>
-#include <KConfigDialog>
-#include <KMessageBox>
-#include <KLocalizedString>
-#include <KNotification>
 #include <QIcon>
 #include <QStandardPaths>
+
+#include <memory>
+
+using namespace Qt::Literals::StringLiterals;
+
 
 MainWindow::MainWindow(QWidget *parent)
     : KXmlGuiWindow(parent)
     , m_fileTreeView(nullptr)
     , m_editorTabs(nullptr)
-    , m_statusLeft(nullptr)
-    , m_statusCenter(nullptr)
-    , m_statusRight(nullptr)
     , m_chezmoiService(std::make_unique<ChezmoiService>(this))
     , m_dotfileManager(std::make_unique<DotfileManager>(this))
     , m_configEditor(std::make_unique<ConfigEditor>(this))
+    , m_statusBar(nullptr)
     , m_currentFile()
 {
     QIcon appIcon = QIcon::fromTheme(QStringLiteral("dotweaver"), QIcon(QStringLiteral(":/icons/dotweaver.png")));
@@ -120,60 +120,11 @@ void MainWindow::setupUI()
 
 void MainWindow::setupStatusBar()
 {
-    // Create status bar labels
-    m_statusLeft = new QLabel(this);
-    m_statusCenter = new QLabel(this);
-    m_statusRight = new QLabel(this);
+    // Create Qt's status bar first
+    auto *qtStatusBar = statusBar(); // This creates the QStatusBar if it doesn't exist
     
-    // Set initial text
-    m_statusLeft->setText(i18n("Ready"));
-    m_statusCenter->setText(""_L1);
-    
-    // Add to status bar
-    statusBar()->addWidget(m_statusLeft, 1);
-    statusBar()->addPermanentWidget(m_statusCenter, 1);
-    statusBar()->addPermanentWidget(m_statusRight, 0);
-    
-    /*
-    m_statusLeft->setStyleSheet(QStringLiteral(
-        "QLabel {"
-        "    padding: 2px 8px;"
-        "    background-color: palette(highlight);"
-        "    color: palette(highlighted-text);"
-        "    border-radius: 3px;"
-        "    font-family: monospace;"
-        "    font-size: 11px;"
-        "}"
-    ));*/
-    
-    // Initial git status update
-    updateGitStatus();
-}
-
-void MainWindow::updateGitStatus()
-{
-    QProcess gitProcess;
-    gitProcess.setWorkingDirectory(m_chezmoiService->getChezmoiDirectory());
-    
-    // short commit hash and relative time
-    gitProcess.start("git"_L1, {
-        "log"_L1, "-1"_L1, "--format=%h|%ar"_L1
-    });
-    
-    if (gitProcess.waitForFinished(3000) && gitProcess.exitCode() == 0) {
-        QString output = QString::fromUtf8(gitProcess.readAllStandardOutput()).trimmed();
-        QStringList parts = output.split('|'_L1);
-        
-        if (parts.size() == 2) {
-            QString hash = parts[0];
-            QString timeAgo = parts[1];
-            m_statusLeft->setText(QStringLiteral("%1 • %2").arg(hash, timeAgo));
-        } else {
-            m_statusLeft->setText(i18n("Git: No commits"));
-        }
-    } else {
-        m_statusLeft->setText(i18n("Git: Not available"));
-    }
+    // Create our custom StatusBar manager
+    m_statusBar = new ::StatusBar(qtStatusBar, m_chezmoiService.get(), this);
 }
 
 void MainWindow::setupActions()
@@ -288,20 +239,9 @@ void MainWindow::loadDotfiles()
 {
     LOG_INFO("MainWindow: Loading dotfiles..."_L1);
     
-    // Update status
-    if (m_statusRight) {
-        m_statusLeft->setText(i18n("Loading dotfiles..."));
-    }
-    
     // Set up the connection between services
     m_dotfileManager->setChezmoiService(m_chezmoiService.get());
     
     // Refresh the file tree
     m_dotfileManager->refreshFiles();
-    
-    // Update status and git info
-    if (m_statusRight) {
-        m_statusRight->setText(i18n("Ready"));
-    }
-    updateGitStatus();
 }
