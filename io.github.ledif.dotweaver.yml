@@ -1,6 +1,6 @@
 app-id: io.github.ledif.dotweaver
 runtime: org.kde.Platform
-runtime-version: '6.6'
+runtime-version: '6.9'
 sdk: org.kde.Sdk
 command: dotweaver
 finish-args:
@@ -19,11 +19,11 @@ modules:
   - name: chezmoi
     buildsystem: simple
     build-commands:
-      - install -Dm755 chezmoi /app/bin/chezmoi
+      - install -Dm755 chezmoi-linux-amd64 /app/bin/chezmoi
     sources:
-      - type: archive
-        url: https://github.com/twpayne/chezmoi/releases/download/v2.46.1/chezmoi_2.46.1_linux_amd64.tar.gz
-        sha256: d9ba7117e8bd17fd1b840f25065fe481b7e5b08e70b6f47e4a11c16dbdd1ec0e
+      - type: file
+        url: https://github.com/twpayne/chezmoi/releases/download/v2.64.0/chezmoi-linux-amd64
+        sha256: c6cc87e9641ad4caa5d86d5f9e9bb7b121d203ae593138ef42ed416dc5a4237a
 
   - name: dotweaver
     buildsystem: cmake-ninja

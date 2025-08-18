@@ -56,12 +56,12 @@ dev-shell:
 # Build Flatpak
 flatpak-build:
     @echo "Building Flatpak..."
-    flatpak-builder --force-clean build-flatpak org.dotweaver.yml
+    flatpak-builder --force-clean build-flatpak io.github.ledif.dotweaver.yml
 
 # Install Flatpak locally
-flatpak-install: flatpak-build
+flatpak-install:
     @echo "Installing Flatpak locally..."
-    flatpak-builder --install --force-clean build-flatpak org.kde.kchezmoi.yml
+    flatpak-builder --install --user --force-clean build-flatpak io.github.ledif.dotweaver.yml
 
 # Lint code
 lint:

@@ -49,6 +49,5 @@ target_include_directories(dotweaver PRIVATE
 install(TARGETS dotweaver DESTINATION ${KDE_INSTALL_BINDIR})
 
 # Install desktop file and icons
-install(FILES io.github.ledif.dotweaver.desktop DESTINATION ${KDE_INSTALL_APPDIR})
+install(FILES ../io.github.ledif.dotweaver.desktop DESTINATION ${KDE_INSTALL_APPDIR})
 install(FILES ../icons/dotweaver.png DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/256x256/apps/)
-install(FILES ../icons/dotweaver.svg DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps/ OPTIONAL)
