@@ -22,7 +22,6 @@ build-options:
     - GOBIN=/app/bin
     - GOROOT=/usr/lib/sdk/golang
     - CGO_ENABLED=0
-    - PKG=ci/pkg/linux/flatpak
 
 modules:
   - name: chezmoi
@@ -41,7 +40,6 @@ modules:
           type: git
           tag-pattern: ^v([\d.]+)$
           is-important: true
-
 
       - go.mod.yml
 
