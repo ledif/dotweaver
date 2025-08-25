@@ -2,6 +2,8 @@ app-id: io.github.ledif.dotweaver
 runtime: org.kde.Platform
 runtime-version: '6.9'
 sdk: org.kde.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.golang
 command: dotweaver
 finish-args:
   - --share=ipc
@@ -15,20 +17,37 @@ finish-args:
   - --talk-name=org.freedesktop.Notifications
   - --system-talk-name=org.freedesktop.login1
 
+build-options:
+  env:
+    - GOBIN=/app/bin
+    - GOROOT=/usr/lib/sdk/golang
+    - CGO_ENABLED=0
+
 modules:
   - name: chezmoi
     buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/golang/bin
     build-commands:
-      - install -Dm755 chezmoi-linux-amd64 /app/bin/chezmoi
-    sources:
-      - type: file
-        url: https://github.com/twpayne/chezmoi/releases/download/v2.64.0/chezmoi-linux-amd64
-        sha256: c6cc87e9641ad4caa5d86d5f9e9bb7b121d203ae593138ef42ed416dc5a4237a
+      - go install -mod=vendor .
 
-  - name: dotweaver
-    buildsystem: cmake-ninja
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
     sources:
-      - type: dir
-        path: .
+      - type: git
+        url: https://github.com/twpayne/chezmoi
+        tag: v2.64.0
+        commit: 9b1def1eff7c581272ffeb7f707e7af80ec434b1
+        x-checker-data:
+          type: git
+          tag-pattern: ^v([\d.]+)$
+          is-important: true
+
+      - go.mod.yml
+
+    modules:
+      - name: dotweaver
+        buildsystem: cmake-ninja
+        config-opts:
+          - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        sources:
+          - type: dir
+            path: .
