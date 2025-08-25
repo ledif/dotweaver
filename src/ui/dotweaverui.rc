@@ -32,6 +32,7 @@
         <Action name="sync"/>
         <Action name="update"/>
         <Separator/>
+        <Action name="view_template_data"/>
         <Action name="show_log"/>
         <Separator/>
         <Action name="init_repo"/>

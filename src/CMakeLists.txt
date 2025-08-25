@@ -14,6 +14,8 @@ add_executable(dotweaver
     logger.h
     logviewer.cpp
     logviewer.h
+    dataviewer.cpp
+    dataviewer.h
     statusbar.cpp
     statusbar.h
     ../resources.qrc

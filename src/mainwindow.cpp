@@ -5,6 +5,7 @@
 #include "filetab.h"
 #include "logger.h"
 #include "logviewer.h"
+#include "dataviewer.h"
 #include "statusbar.h"
 
 
@@ -184,6 +185,12 @@ void MainWindow::setupActions()
     showLogAction->setToolTip(i18n("View application log messages"));
     connect(showLogAction, &QAction::triggered, this, &MainWindow::showLogViewer);
     
+    auto *viewDataAction = actionCollection()->addAction(QStringLiteral("view_template_data"));
+    viewDataAction->setText(i18n("View Template &Data..."));
+    viewDataAction->setIcon(QIcon::fromTheme(QStringLiteral("code-variable")));
+    viewDataAction->setToolTip(i18n("View chezmoi template variables"));
+    connect(viewDataAction, &QAction::triggered, this, &MainWindow::showDataViewer);
+    
     // Help menu
     KStandardAction::aboutApp(this, &MainWindow::showAbout, actionCollection());
     
@@ -281,6 +288,28 @@ void MainWindow::showLogViewer()
     logViewer->activateWindow();
     
     LOG_INFO("Log viewer opened"_L1);
+}
+
+void MainWindow::showDataViewer()
+{
+    if (!m_chezmoiService) {
+        KMessageBox::error(this, i18n("Chezmoi service is not available."));
+        return;
+    }
+    
+    QString jsonData = m_chezmoiService->getTemplateData();
+    if (jsonData.isEmpty()) {
+        KMessageBox::error(this, i18n("Failed to retrieve template data from chezmoi."));
+        return;
+    }
+    
+    auto *dataViewer = new DataViewer(jsonData, this);
+    dataViewer->setAttribute(Qt::WA_DeleteOnClose);
+    dataViewer->show();
+    dataViewer->raise();
+    dataViewer->activateWindow();
+    
+    LOG_INFO("Data viewer opened"_L1);
 }
 
 void MainWindow::onFileSelected(const QString &filePath)

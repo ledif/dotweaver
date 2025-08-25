@@ -465,3 +465,23 @@ QString ChezmoiService::convertToTargetPath(const QString &sourcePath) const
     
     return targetPath;
 }
+
+QString ChezmoiService::getTemplateData()
+{
+    if (m_chezmoiPath.isEmpty()) {
+        LOG_ERROR("Cannot get template data: chezmoi executable not found"_L1);
+        return QString();
+    }
+    
+    LOG_DEBUG("Getting template data from chezmoi"_L1);
+    
+    if (!runChezmoiCommand({QStringLiteral("data"), QStringLiteral("--format=json")}, false)) {
+        LOG_WARNING("Failed to run 'chezmoi data --format=json'"_L1);
+        return QString();
+    }
+    
+    QString data = QString::fromUtf8(m_process->readAllStandardOutput());
+    LOG_DEBUG(QStringLiteral("Retrieved template data (%1 chars)").arg(data.length()));
+    
+    return data;
+}

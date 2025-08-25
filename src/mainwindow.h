@@ -30,6 +30,7 @@ private Q_SLOTS:
     void syncFiles();
     void showAbout();
     void showLogViewer();
+    void showDataViewer();
     void toggleSidebar();
     void expandAllItems();
     void collapseAllItems();

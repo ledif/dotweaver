@@ -38,6 +38,7 @@ public:
     QString getSourcePath(const QString &filePath);
     QString getDestinationDirectory() const;
     QString convertToTargetPath(const QString &sourcePath) const;
+    QString getTemplateData();
 
 Q_SIGNALS:
     void operationCompleted(bool success, const QString &message);
