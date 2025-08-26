@@ -27,7 +27,7 @@ public:
     ~DataViewer() override = default;
 
 public Q_SLOTS:
-    void refreshData();
+    void expandAllItems();
 
 private Q_SLOTS:
     void onItemSelectionChanged();
@@ -47,10 +47,9 @@ private:
     QTreeWidget *m_treeWidget;
     QTextEdit *m_detailsEdit;
     QSplitter *m_splitter;
-    QPushButton *m_refreshButton;
+    QPushButton *m_expandButton;
     QPushButton *m_copyValueButton;
     QPushButton *m_copyPathButton;
-    QPushButton *m_closeButton;
     QVBoxLayout *m_mainLayout;
     QHBoxLayout *m_buttonLayout;
     

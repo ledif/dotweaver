@@ -30,10 +30,9 @@ DataViewer::DataViewer(const QString &jsonData, QWidget *parent)
     , m_treeWidget(nullptr)
     , m_detailsEdit(nullptr)
     , m_splitter(nullptr)
-    , m_refreshButton(nullptr)
+    , m_expandButton(nullptr)
     , m_copyValueButton(nullptr)
     , m_copyPathButton(nullptr)
-    , m_closeButton(nullptr)
     , m_mainLayout(nullptr)
     , m_buttonLayout(nullptr)
 {
@@ -78,18 +77,17 @@ void DataViewer::setupUI()
     // Add widgets to splitter
     m_splitter->addWidget(m_treeWidget);
     m_splitter->addWidget(m_detailsEdit);
-    m_splitter->setSizes({400, 400});
+    m_splitter->setSizes({640, 160}); // 80% tree view, 20% details view
     
     m_mainLayout->addWidget(m_splitter);
     
     // Create button layout
     m_buttonLayout = new QHBoxLayout();
     
-    m_refreshButton = new QPushButton(i18n("&Refresh"), this);
-    m_refreshButton->setIcon(QIcon::fromTheme(QStringLiteral("view-refresh")));
-    m_refreshButton->setToolTip(i18n("Refresh template data from chezmoi"));
-    m_refreshButton->setEnabled(false); // Disable for static JSON data
-    connect(m_refreshButton, &QPushButton::clicked, this, &DataViewer::refreshData);
+    m_expandButton = new QPushButton(i18n("&Expand All"), this);
+    m_expandButton->setIcon(QIcon::fromTheme(QStringLiteral("view-list-tree")));
+    m_expandButton->setToolTip(i18n("Expand all items in the tree view"));
+    connect(m_expandButton, &QPushButton::clicked, this, &DataViewer::expandAllItems);
     
     m_copyValueButton = new QPushButton(i18n("Copy &Value"), this);
     m_copyValueButton->setIcon(QIcon::fromTheme(QStringLiteral("edit-copy")));
@@ -104,16 +102,10 @@ void DataViewer::setupUI()
     connect(m_copyPathButton, &QPushButton::clicked, this, &DataViewer::copySelectedPath);
     
     // Add stretch to push buttons to the left
-    m_buttonLayout->addWidget(m_refreshButton);
+    m_buttonLayout->addWidget(m_expandButton);
     m_buttonLayout->addWidget(m_copyValueButton);
     m_buttonLayout->addWidget(m_copyPathButton);
     m_buttonLayout->addStretch();
-    
-    m_closeButton = new QPushButton(i18n("&Close"), this);
-    m_closeButton->setIcon(QIcon::fromTheme(QStringLiteral("dialog-close")));
-    connect(m_closeButton, &QPushButton::clicked, this, &QDialog::accept);
-    
-    m_buttonLayout->addWidget(m_closeButton);
     
     m_mainLayout->addLayout(m_buttonLayout);
 }
@@ -358,8 +350,10 @@ void DataViewer::copySelectedPath()
     LOG_INFO(QStringLiteral("Copied path to clipboard: %1").arg(path));
 }
 
-void DataViewer::refreshData()
+void DataViewer::expandAllItems()
 {
-    // No-op for static JSON data
-    // In a future version, this could reload data from ChezmoiService
+    if (m_treeWidget) {
+        m_treeWidget->expandAll();
+        LOG_INFO("Expanded all items in the tree view"_L1);
+    }
 }
